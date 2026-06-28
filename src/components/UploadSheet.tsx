@@ -1,26 +1,9 @@
 import { motion } from 'framer-motion'
+import { publicAsset } from '../utils/assets'
 
 const XMARK = String.fromCodePoint(0x100184)
 const CHECKMARK = String.fromCodePoint(0x100062)
 const SF = "'SF Pro Display', 'SF Pro', -apple-system"
-
-const PHOTO_COLORS = [
-  'linear-gradient(135deg, #667eea, #764ba2)',
-  'linear-gradient(135deg, #f093fb, #f5576c)',
-  'linear-gradient(135deg, #4facfe, #00f2fe)',
-  'linear-gradient(135deg, #43e97b, #38f9d7)',
-  'linear-gradient(135deg, #fa709a, #fee140)',
-  'linear-gradient(135deg, #a18cd1, #fbc2eb)',
-  'linear-gradient(135deg, #fccb90, #d57eeb)',
-  'linear-gradient(135deg, #e0c3fc, #8ec5fc)',
-  'linear-gradient(135deg, #f5576c, #ff6f00)',
-  'linear-gradient(135deg, #30cfd0, #330867)',
-  'linear-gradient(135deg, #a8edea, #fed6e3)',
-  'linear-gradient(135deg, #ff9a9e, #fecfef)',
-  'linear-gradient(135deg, #96fbc4, #f9f586)',
-  'linear-gradient(135deg, #d4fc79, #96e6a1)',
-  'linear-gradient(135deg, #89f7fe, #66a6ff)',
-]
 
 interface UploadSheetProps {
   selectedImage: number | null
@@ -43,7 +26,7 @@ export default function UploadSheet({ selectedImage, onSelectImage, onClose }: U
 
       {/* Bottom sheet — Figma shadow: 0px 15px 75px rgba(0,0,0,0.18) */}
       <motion.div
-        className="absolute bottom-0 left-0 w-full h-[664px] bg-white rounded-t-[38px] z-30 flex flex-col"
+        className="absolute bottom-0 left-0 w-full h-[702px] bg-white rounded-t-[38px] z-30 flex flex-col"
         style={{ boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)', fontFamily: "var(--font-ui)" }}
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
@@ -72,23 +55,12 @@ export default function UploadSheet({ selectedImage, onSelectImage, onClose }: U
         {/* Content */}
         <div className="flex-1 flex flex-col justify-between pb-9 px-8">
           <div className="flex flex-col items-center gap-6">
-            <motion.div
-              className="w-[160px] h-[160px] rounded-full bg-black/[0.05] flex items-center justify-center overflow-hidden relative"
-              key={selectedImage !== null ? `selected-${selectedImage}` : 'empty'}
-              initial={selectedImage !== null ? { scale: 0 } : false}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 20, mass: 0.8 }}
-            >
-              {selectedImage !== null ? (
-                <div className="w-full h-full" style={{ background: PHOTO_COLORS[selectedImage % PHOTO_COLORS.length] }} />
-              ) : (
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#B0B0B0" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="4" width="18" height="16" rx="2.5" />
-                  <circle cx="8.5" cy="10" r="2" />
-                  <polyline points="22 15 16 10 4 20" />
-                </svg>
-              )}
-            </motion.div>
+            <motion.img
+              src={publicAsset('img/characters.png')}
+              alt=""
+              className="w-[232px] h-[196px] object-contain"
+              draggable={false}
+            />
 
             <div className="text-center">
               <h2 className="text-[22px] font-semibold text-black">上传角色图片</h2>

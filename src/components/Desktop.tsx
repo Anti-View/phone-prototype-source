@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate, animate } from 'framer-motion'
 import CornerKit from '@cornerkit/core'
+import DynamicIsland, { type IslandVariant } from './DynamicIsland'
 import { publicAsset } from '../utils/assets'
 
 const UNLOCK_THRESHOLD = 64
@@ -14,10 +15,14 @@ const DOCK_TOP = PHONE_HEIGHT - DOCK_BOTTOM - DOCK_HEIGHT
 const DOCK_BLUR_PAD = 28
 
 
-function AppIcon({ label }: { label?: string }) {
+function AppIcon({ label, src }: { label?: string; src?: string }) {
   return (
-    <div className="w-[64px] h-[64px] rounded-[16px] bg-white flex-shrink-0 relative overflow-hidden flex items-center justify-center">
-      {label && <span className="text-black/40 text-[13px] font-semibold select-none">{label}</span>}
+    <div data-squircle data-squircle-radius="16" data-squircle-smoothing="0.6" className="w-[64px] h-[64px] bg-white flex-shrink-0 relative overflow-hidden flex items-center justify-center">
+      {src ? (
+        <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
+      ) : label ? (
+        <span className="text-black/40 text-[13px] font-semibold select-none">{label}</span>
+      ) : null}
     </div>
   )
 }
@@ -39,15 +44,18 @@ function WidgetLabel({ label }: { label: string }) {
   )
 }
 
-function Dock({ onOpenApp, onLock }: { onOpenApp?: () => void; onLock?: () => void }) {
+function Dock({ onOpenApp, onLock, onAction }: { onOpenApp?: () => void; onLock?: () => void; onAction?: () => void }) {
   return (
     <div className="absolute inset-0 flex flex-row items-center justify-between"
       style={{ padding: '0px 19px' }}>
       {[0, 1, 2, 3].map(i => (
         <div key={i}
-          onClick={i === 0 ? onLock : i === 3 ? onOpenApp : undefined}
-          className={i === 0 || i === 3 ? 'cursor-pointer active:scale-90 transition-transform' : ''}>
-          <AppIcon label={`应用${13 + i}`} />
+          onClick={i === 0 ? onLock : i === 1 ? onAction : i === 3 ? onOpenApp : undefined}
+          className={i === 0 || i === 1 || i === 3 ? 'cursor-pointer active:scale-90 transition-transform' : ''}>
+          <AppIcon
+            label={i === 0 ? '锁定' : i === 1 ? '吹气' : i === 2 ? '音乐' : '主题'}
+            src={publicAsset(`img/应用${13 + i}.png`)}
+          />
         </div>
       ))}
     </div>
@@ -125,27 +133,77 @@ function GlassIcon({ char }: { char: string }) {
   )
 }
 
+/* ── Tap vs drag helper ── */
+function useTap(onTap: () => void) {
+  const pos = useRef({ x: 0, y: 0 })
+  return {
+    onPointerDown: (e: React.PointerEvent) => { pos.current = { x: e.clientX, y: e.clientY } },
+    onPointerUp: (e: React.PointerEvent) => {
+      const dx = e.clientX - pos.current.x
+      const dy = e.clientY - pos.current.y
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) onTap()
+    },
+  }
+}
+
 /* ── Panel 1 ── */
-function Panel1() {
+function Panel1({ onWidgetClick }: { onWidgetClick: (type: string, variant: IslandVariant) => void }) {
+  const tapA = useTap(() => onWidgetClick('album', 'wide'))
+  const tapB = useTap(() => onWidgetClick('camera', 'square'))
+  const tapC = useTap(() => onWidgetClick('diary', 'wide'))
+
   return (
     <ContentPanel>
       <div className="flex flex-col gap-[32px]">
-        <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[350px] h-[159px] bg-white relative">
-          <WidgetLabel label="小组件A" />
+        <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[350px] h-[159px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" {...tapA}>
+          {/* Layer 4: 底层 */}
+          <img src={publicAsset('img/小组件A/底层.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+          {/* Layer 3: 染色层 */}
+          <img src={publicAsset('img/小组件A/染色层.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+          {/* Layer 2: Three polaroids, 4px visual gap, centered as group */}
+          <div className="absolute inset-0 flex items-center justify-center gap-[16px]">
+            {[1, 2, 3].map((i, idx) => (
+              <div
+                key={i}
+                className="w-[88px] h-[121px] bg-white rounded-[4px] relative flex-shrink-0"
+                style={{ transform: `rotate(${[12, -7, 6][idx]}deg)` }}
+              >
+                <img
+                  src={publicAsset(`img/小组件A/照片${i}.png`)}
+                  alt=""
+                  className="absolute rounded-[2px]"
+                  style={{ left: 5.5, top: 5.5, width: 77, height: 77 }}
+                  draggable={false}
+                />
+              </div>
+            ))}
+          </div>
+          {/* Layer 1: 高光层 (top) */}
+          <img src={publicAsset('img/小组件A/高光层.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
         </div>
         <div className="flex gap-[32px]">
-          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] bg-white relative">
-            <WidgetLabel label="小组件B" />
+          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] bg-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" {...tapB}>
+            <img src={publicAsset('img/小组件B.png')} alt="" className="w-full h-full object-cover" draggable={false} />
           </div>
-          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] bg-white relative">
-            <WidgetLabel label="小组件C" />
+          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" {...tapC}>
+            <img src={publicAsset('img/小组件C.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+              <div className="px-[28px] pt-[28px]">
+                <p className="text-white text-[12px] leading-[20px] opacity-90 line-clamp-4" style={{ fontFamily: 'PingFang SC, sans-serif' }}>
+                  上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                </p>
+              </div>
+              <div className="flex justify-between items-center px-[18px] pb-[14px]">
+                <div className="flex items-center gap-[5px]">
+                  <svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="3" cy="3" r="3" fill="#28AF28"/>
+                  </svg>
+                  <span className="text-[#70675B] text-[14px] leading-[20px]" style={{ fontFamily: 'PingFang SC, sans-serif' }}>未读</span>
+                </div>
+                <span className="text-[#70675B] text-[14px] leading-[20px]" style={{ fontFamily: 'PingFang SC, sans-serif' }}>{new Date().getMonth() + 1}.{new Date().getDate()}</span>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-[32px]">
-          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] bg-white relative">
-            <WidgetLabel label="小组件D" />
-          </div>
-          <IconGrid labels={['应用1', '应用2', '应用3', '应用4']} />
         </div>
       </div>
     </ContentPanel>
@@ -184,7 +242,55 @@ interface DesktopProps { onOpenApp?: () => void }
 export default function Desktop({ onOpenApp }: DesktopProps) {
   const [isLocked, setIsLocked] = useState(true)
   const [unlockedPage, setUnlockedPage] = useState(0)
+  const [islands, setIslands] = useState<Record<string, boolean>>({})
   const ckRef = useRef<CornerKit | null>(null)
+
+  /* ── Character animation state (durations from actual WebP files in public/videos/) ── */
+  const ANIM: Record<string, number> = {
+    '待机': 3234,    // 97f × 33ms (30fps) — read from file
+    '吹气': 3234,    // 97f × 33ms (30fps) — read from file
+    '听音乐': 0,     // TODO: add file then measure
+    '写日记': 0,     // TODO: add file then measure
+  }
+  const DEFAULT_ANIM = '待机'
+  const [charAnim, setCharAnim] = useState(DEFAULT_ANIM)
+  const [charCycle, setCharCycle] = useState(() => Date.now())
+  const charTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Play `name` once, then return to default (待机).
+  // Waits for current loop to finish before switching.
+  const playAnim = (name: string) => {
+    // clear pending
+    if (charTimerRef.current) clearTimeout(charTimerRef.current)
+
+    const step1 = () => {
+      setCharAnim(name)
+      setCharCycle(Date.now())
+      // after one loop of target, return to default
+      const targetDur = ANIM[name] || ANIM[DEFAULT_ANIM]
+      charTimerRef.current = setTimeout(() => {
+        setCharAnim(DEFAULT_ANIM)
+        setCharCycle(Date.now())
+        charTimerRef.current = null
+      }, targetDur)
+    }
+
+    if (charAnim === name) {
+      // already playing target — re-extend: wait for current cycle then go back
+      const elapsed = (Date.now() - charCycle) % (ANIM[name] || ANIM[DEFAULT_ANIM])
+      const remaining = (ANIM[name] || ANIM[DEFAULT_ANIM]) - elapsed
+      charTimerRef.current = setTimeout(step1, remaining)
+    } else {
+      // playing something else — finish current loop, then play target once
+      const curDur = ANIM[charAnim] || ANIM[DEFAULT_ANIM]
+      const elapsed = (Date.now() - charCycle) % curDur
+      const remaining = curDur - elapsed
+      charTimerRef.current = setTimeout(step1, remaining)
+    }
+  }
+
+  // cleanup timer on unmount
+  useEffect(() => () => { if (charTimerRef.current) clearTimeout(charTimerRef.current) }, [])
 
   /* ── Motion values ── */
   const unlockY = useMotionValue(0)
@@ -233,28 +339,17 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
           return import(/* @vite-ignore */ src)
         })()
         if (cancelled || !mod.LiquidGlass) return
-        const glassEl = document.querySelector('[data-glass="dock"]') as HTMLElement | null
-        if (!glassEl) return
-        glassEl.dataset.config = JSON.stringify({
-          blurAmount: 0.05,
-          refraction: 0.5,
-          chromAberration: 0.05,
-          edgeHighlight: 0.15,
-          specular: 0,
-          fresnel: 1,
-          distortion: 0,
-          cornerRadius: 40,
-          zRadius: 40,
-          opacity: 1,
-          saturation: 0,
-          brightness: 0,
-          shadowOpacity: 0,
-          shadowSpread: 10,
-          bevelMode: 0,
+        const dockEl = document.querySelector('[data-glass="dock"]') as HTMLElement | null
+        if (!dockEl) return
+        dockEl.dataset.config = JSON.stringify({
+          blurAmount: 0.05, refraction: 0.5, chromAberration: 0.05,
+          edgeHighlight: 0.15, specular: 0, fresnel: 1, distortion: 0,
+          cornerRadius: 40, zRadius: 40, opacity: 1, saturation: 0,
+          brightness: 0, shadowOpacity: 0, shadowSpread: 10, bevelMode: 0,
         })
         instance = await mod.LiquidGlass.init({
           root: document.querySelector('#liquid-root'),
-          glassElements: [glassEl],
+          glassElements: [dockEl],
         })
         lgRef.current = instance
       } catch (e) {
@@ -331,11 +426,11 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         draggable={false}
       />
 
-      {/* ── b-layer character (page 1 / B segment, 280×280, centered, 140px from bottom) ── */}
+      {/* ── b-layer character (page 1 / B segment, 400×400, centered horizontally, 80px from bottom) ── */}
       <motion.div
         className="absolute pointer-events-none select-none z-[1]"
         style={{
-          left: 61, top: 454, width: 280, height: 280,
+          left: 1, bottom: 80, width: 400, height: 400,
           x: wallSpring,
         }}
       >
@@ -343,12 +438,12 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         <div
           className="absolute"
           style={{
-            left: 45, bottom: -4, width: 190, height: 24,
+            left: 105, bottom: 46, width: 190, height: 24,
             background: 'radial-gradient(ellipse at center, rgba(194, 151, 108, 0.72) 0%, rgba(194, 151, 108, 0.34) 45%, rgba(194, 151, 108, 0) 72%)',
             borderRadius: '50%',
           }}
         />
-        <img src={publicAsset('videos/character.gif')} alt="" className="w-full h-full object-contain relative" draggable={false} style={{ position: 'relative', zIndex: 1 }} />
+        <img src={publicAsset(`videos/${charAnim}.webp`)} alt="" className="w-full h-full object-cover relative" draggable={false} style={{ position: 'relative', zIndex: 1 }} />
       </motion.div>
 
       {/* ── Unlock Div: lock icon + time + bottom glass icons (370×731, bottom=48) ── */}
@@ -399,7 +494,7 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         onDrag={handlePageDrag}
         onDragEnd={handlePageDragEnd}
       >
-        <div className="w-[402px] h-full flex-shrink-0"><Panel1 /></div>
+        <div className="w-[402px] h-full flex-shrink-0"><Panel1 onWidgetClick={(type) => setIslands(p => ({ ...p, [type]: true }))} /></div>
         <div className="w-[402px] h-full flex-shrink-0"><Panel2 /></div>
         <div className="w-[402px] h-full flex-shrink-0"><Panel3 /></div>
       </motion.div>
@@ -450,7 +545,7 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
             />
 
             <div className="absolute inset-0" style={{ zIndex: 2 }}>
-              <Dock onOpenApp={onOpenApp} onLock={lockScreen} />
+              <Dock onOpenApp={onOpenApp} onLock={lockScreen} onAction={() => playAnim('吹气')} />
             </div>
           </div>
         </motion.div>
@@ -472,9 +567,26 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
             padding: '0px 19px',
           }}
         >
-          <Dock onOpenApp={onOpenApp} onLock={lockScreen} />
+          <Dock onOpenApp={onOpenApp} onLock={lockScreen} onAction={() => playAnim('吹气')} />
         </motion.div>
       )}
+
+      {/* ── Dynamic Islands (one per widget, independent) ── */}
+      <DynamicIsland
+        expanded={!!islands['album']}
+        variant="wide"
+        onToggle={() => setIslands(p => ({ ...p, album: !p.album }))}
+      />
+      <DynamicIsland
+        expanded={!!islands['camera']}
+        variant="square"
+        onToggle={() => setIslands(p => ({ ...p, camera: !p.camera }))}
+      />
+      <DynamicIsland
+        expanded={!!islands['diary']}
+        variant="wide"
+        onToggle={() => setIslands(p => ({ ...p, diary: !p.diary }))}
+      />
     </div>
   )
 }

@@ -26,6 +26,18 @@ body {
   touch-action: none;
   overscroll-behavior: none;
 }
+model-viewer,
+model-viewer::part(container),
+model-viewer::part(default-progress-bar),
+model-viewer::part(default-progress-mask) {
+  cursor: none !important;
+}
+model-viewer * {
+  cursor: none !important;
+}
+model-viewer::part(default-ar-button) {
+  display: none !important;
+}
 body, body * {
   cursor: none !important;
   user-select: none !important;

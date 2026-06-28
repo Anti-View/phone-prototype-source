@@ -1,0 +1,11 @@
+{
+  "dir": "C:/Users/k/Desktop/毕设/video_maker/output_吹气",
+  "out": ".\\吹气.webp",
+  "filter": "",
+  "size": "400",
+  "fps": 30,
+  "quality": 100,
+  "method": 4,
+  "lossless": true,
+  "minsize": true
+}
