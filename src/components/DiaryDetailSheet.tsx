@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type PointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import type { DiaryEntry } from '../types/diary'
 import { publicAsset } from '../utils/assets'
@@ -57,6 +57,16 @@ export default function DiaryDetailSheet({
 }) {
   const detailScrollRef = useRef<HTMLDivElement | null>(null)
   const detailMomentumRef = useRef<number | null>(null)
+  const [showTopFade, setShowTopFade] = useState(false)
+
+  const updateTopFade = useCallback(() => {
+    const el = detailScrollRef.current
+    if (!el) {
+      setShowTopFade(false)
+      return
+    }
+    setShowTopFade(el.scrollTop > 1)
+  }, [])
 
   const detailDragRef = useRef({
     active: false,
@@ -95,17 +105,20 @@ export default function DiaryDetailSheet({
 
       if (next < 0) {
         el.scrollTop = 0
+        updateTopFade()
         detailMomentumRef.current = null
         return
       }
 
       if (next > maxScroll) {
         el.scrollTop = maxScroll
+        updateTopFade()
         detailMomentumRef.current = null
         return
       }
 
       el.scrollTop = next
+      updateTopFade()
       velocity *= Math.pow(0.95, dt / 16.67)
 
       if (Math.abs(velocity) < 0.02) {
@@ -117,7 +130,7 @@ export default function DiaryDetailSheet({
     }
 
     detailMomentumRef.current = requestAnimationFrame(step)
-  }, [getDetailMaxScroll])
+  }, [getDetailMaxScroll, updateTopFade])
 
   const handleDetailPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
@@ -168,9 +181,10 @@ export default function DiaryDetailSheet({
     const maxScroll = getDetailMaxScroll(el)
 
     el.scrollTop = Math.max(0, Math.min(maxScroll, rawScrollTop))
+    updateTopFade()
 
     e.preventDefault()
-  }, [getDetailMaxScroll])
+  }, [getDetailMaxScroll, updateTopFade])
 
   const stopDetailDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = detailDragRef.current
@@ -201,6 +215,14 @@ export default function DiaryDetailSheet({
       cancelDetailMomentum()
     }
   }, [cancelDetailMomentum])
+
+  useEffect(() => {
+    const el = detailScrollRef.current
+    if (el) {
+      el.scrollTop = 0
+    }
+    setShowTopFade(false)
+  }, [entry.id])
 
   return (
     <>
@@ -432,19 +454,22 @@ export default function DiaryDetailSheet({
               overflow: 'hidden',
             }}
           >
-            {/* Top fade mask: player 下方的白色渐变遮罩 */}
-            <div
+            {/* Top fade mask — only visible when scrolled */}
+            <motion.div
               style={{
                 position: 'absolute',
                 left: 0,
                 right: 0,
                 top: 0,
-                height: 48,
+                height: 32,
                 pointerEvents: 'none',
                 zIndex: 2,
+                opacity: showTopFade ? 1 : 0,
                 background:
-                  'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.92) 35%, rgba(255, 255, 255, 0) 100%)',
+                  'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.72) 42%, rgba(255, 255, 255, 0) 100%)',
               }}
+              animate={{ opacity: showTopFade ? 1 : 0 }}
+              transition={{ duration: 0.16, ease: 'easeOut' }}
             />
 
             <div
@@ -461,6 +486,7 @@ export default function DiaryDetailSheet({
                 scrollbarWidth: 'none',
                 cursor: 'grab',
               }}
+              onScroll={updateTopFade}
               onPointerDown={handleDetailPointerDown}
               onPointerMove={handleDetailPointerMove}
               onPointerUp={stopDetailDrag}
