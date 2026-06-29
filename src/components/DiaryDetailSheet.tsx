@@ -60,7 +60,6 @@ export default function DiaryDetailSheet({
   const detailMomentumRef = useRef<number | null>(null)
   const detailRubberOffsetRef = useRef(0)
   const detailRubberReturnRef = useRef<number | null>(null)
-  const layoutFrameRef = useRef<HTMLDivElement | null>(null)
   const [showTopFade, setShowTopFade] = useState(false)
 
   const RUBBER_SPRING = 0.18
@@ -340,22 +339,6 @@ export default function DiaryDetailSheet({
           stiffness: 280,
           mass: 1.1,
         }}
-        onUpdate={(latest: any) => {
-          const rawY = latest.y as number
-          const y = typeof rawY === 'number' ? rawY : Number.parseFloat(String(rawY ?? 0))
-          const layout = layoutFrameRef.current
-          if (!layout) return
-          const compensate = Number.isFinite(y) && y < 0 ? -y : 0
-          if (compensate > 0.1) {
-            layout.style.transform = `translateY(${compensate}px)`
-          } else {
-            layout.style.transform = ''
-          }
-        }}
-        onAnimationComplete={() => {
-          const layout = layoutFrameRef.current
-          if (layout) layout.style.transform = ''
-        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* One continuous white background — no seams */}
@@ -375,9 +358,12 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* Real layout frame: 812px keeps internal flex math unchanged */}
-          <div ref={layoutFrameRef} className="w-full h-[812px] flex flex-col">
+          <div className="w-full h-[812px] flex flex-col">
         {/* ── Top handle + controls ── */}
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08, duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
           style={{
             paddingBottom: 10,
             display: 'flex',
@@ -459,7 +445,7 @@ export default function DiaryDetailSheet({
             <div style={{ width: 8, alignSelf: 'stretch', position: 'relative' }} />
             <div style={{ width: 36, height: 22, left: 183, top: 13, position: 'absolute' }} />
           </div>
-        </div>
+        </motion.div>
 
         {/* ── Content area ── */}
         <div
@@ -480,7 +466,10 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* ── Header: date + time + pills + tags (fixed) ── */}
-          <div
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.16, duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
             style={{
               alignSelf: 'stretch',
               display: 'flex',
@@ -553,12 +542,15 @@ export default function DiaryDetailSheet({
             >
               {entry.tags.map(tag => `#${tag}`).join('  ')}
             </div>
-          </div>
+          </motion.div>
 
           {/* ── Player (fixed) ── */}
-          <img
+          <motion.img
             src={publicAsset('img/player.png')}
             alt=""
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.24, duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
             style={{
               width: 354,
               height: 56,
@@ -624,11 +616,13 @@ export default function DiaryDetailSheet({
                 }}
               >
                 {/* Full text */}
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 0.65, y: 0 }}
+                  transition={{ delay: 0.34, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
                   style={{
                     alignSelf: 'stretch',
                     color: 'rgba(0, 0, 0, 0.90)',
-                    opacity: 0.65,
                     fontSize: 16,
                     fontFamily: 'PingFang SC, sans-serif',
                     fontWeight: 400,
@@ -636,12 +630,15 @@ export default function DiaryDetailSheet({
                     whiteSpace: 'pre-wrap',
                     flexShrink: 0,
                   }}
-                >{entry.fullText.trim()}</div>
+                >{entry.fullText.trim()}</motion.div>
 
-                {/* Content image */}
-                <img
+                {/* Content image — delayed until sheet stabilises */}
+                <motion.img
                   src={publicAsset('img/content_image.png')}
                   alt=""
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.52, duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
                   style={{
                     alignSelf: 'stretch',
                     height: 200,
