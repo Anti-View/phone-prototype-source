@@ -424,6 +424,7 @@ export default function Desktop({
   const ANIM: Record<string, number> = {
     '待机': 3234,    // 97f × 33ms (30fps) — read from file
     '吹气': 3234,    // 97f × 33ms (30fps) — read from file
+    '点击': 3234,    // 97f × 33ms (30fps) — assumed same as 待机
     '听音乐': 0,     // TODO: add file then measure
     '写日记': 0,     // TODO: add file then measure
   }
@@ -565,6 +566,50 @@ export default function Desktop({
     animate(wallX, -target * 402, { type: 'spring', stiffness: 200, damping: 30, mass: 0.5 }).then(() => lgRef.current?.markChanged())
   }
 
+  /* ── Character tap detection (root capture, doesn't interfere with drag) ── */
+  const characterTapRef = useRef({ x: 0, y: 0 })
+
+  const isPointInCharacter = useCallback((clientX: number, clientY: number) => {
+    const root = document.getElementById('liquid-root')
+    if (!root) return false
+
+    const rect = root.getBoundingClientRect()
+    const x = clientX - rect.left
+    const y = clientY - rect.top
+
+    const characterLeft = 1 + wallSpring.get()
+    const characterTop = PHONE_HEIGHT - 80 - 400
+    const characterRight = characterLeft + 400
+    const characterBottom = characterTop + 400
+
+    return (
+      x >= characterLeft &&
+      x <= characterRight &&
+      y >= characterTop &&
+      y <= characterBottom
+    )
+  }, [wallSpring])
+
+  const handleRootPointerDownCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (isLocked) return
+    characterTapRef.current = { x: e.clientX, y: e.clientY }
+  }, [isLocked])
+
+  const handleRootPointerUpCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (isLocked) return
+
+    const dx = e.clientX - characterTapRef.current.x
+    const dy = e.clientY - characterTapRef.current.y
+
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) return
+    if (!isPointInCharacter(e.clientX, e.clientY)) return
+
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, [role="button"]')) return
+
+    playAnim('点击')
+  }, [isLocked, isPointInCharacter])
+
   /* ── Return to lock screen (dock first icon) ── */
   const lockScreen = () => {
     if (isLocked) return
@@ -582,7 +627,9 @@ export default function Desktop({
   const SF = "'SF Pro Display', 'SF Pro', -apple-system"
 
   return (
-    <div id="liquid-root" className="absolute inset-0 z-50 overflow-hidden bg-black">
+    <div id="liquid-root" className="absolute inset-0 z-50 overflow-hidden bg-black"
+      onPointerDownCapture={handleRootPointerDownCapture}
+      onPointerUpCapture={handleRootPointerUpCapture}>
       {/* ── Wallpaper (single, always rendered, spring-smoothed) ── */}
       <motion.img
         src={publicAsset('img/new_wallpaper.jpg')}
