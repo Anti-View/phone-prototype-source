@@ -1,4 +1,12 @@
-import { useState, useCallback, useRef, useEffect, type PointerEvent } from 'react'
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+} from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PhoneFrame from './components/PhoneFrame'
 import StatusBar from './components/StatusBar'
@@ -90,6 +98,39 @@ const diaryEntries: Record<string, DiaryEntry> = {
     imageCount: 1,
     images: ['img/diary/image (1).png'],
   },
+}
+
+const DIARY_CARD_TAP_SCALE = 0.96
+
+const DIARY_CARD_TAP_TRANSITION = {
+  type: 'spring' as const,
+  stiffness: 520,
+  damping: 34,
+  mass: 0.6,
+}
+
+function DiaryCardPressable({
+  children,
+  className,
+  style,
+}: {
+  children: ReactNode
+  className?: string
+  style?: CSSProperties
+}) {
+  return (
+    <motion.div
+      className={className}
+      style={{
+        ...style,
+        transformOrigin: 'center center',
+      }}
+      whileTap={{ scale: DIARY_CARD_TAP_SCALE }}
+      transition={DIARY_CARD_TAP_TRANSITION}
+    >
+      {children}
+    </motion.div>
+  )
 }
 
 export default function App() {
@@ -547,64 +588,70 @@ export default function App() {
                 }}
               >
                 {/* Card A */}
-                <FloatInItem index={0} kind="card" data-diary-entry-id="07-02" className="flex flex-col gap-3" style={{
-                  padding: 24,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
-                  borderRadius: 40,
-                  cursor: 'pointer',
-                }}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
-                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>7月2日</span>
-                  </div>
-                  <div className="text-[14px] text-black/50 line-clamp-6" style={{ width: 120, fontFamily: 'PingFang SC, sans-serif' }}>
-                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
-                  </div>
+                <FloatInItem index={0} kind="card" data-diary-entry-id="07-02">
+                  <DiaryCardPressable className="flex flex-col gap-3" style={{
+                    padding: 24,
+                    background: 'rgba(255, 255, 255, 0.40)',
+                    boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                    borderRadius: 40,
+                    cursor: 'pointer',
+                  }}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                      <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>7月2日</span>
+                    </div>
+                    <div className="text-[14px] text-black/50 line-clamp-6" style={{ width: 120, fontFamily: 'PingFang SC, sans-serif' }}>
+                      上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                    </div>
+                  </DiaryCardPressable>
                 </FloatInItem>
 
                 {/* B3 — left */}
-                <FloatInItem index={1} kind="card" data-diary-entry-id="06-30" className="flex flex-col gap-3" style={{
-                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
-                  borderRadius: 40,
-                  overflow: 'hidden', height: 263, flexShrink: 0,
-                  cursor: 'pointer',
-                }}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
-                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月30日</span>
-                  </div>
-                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
-                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
-                  </div>
-                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
-                    <img src={publicAsset('img/diary/image (2).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
-                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
-                  </div>
+                <FloatInItem index={1} kind="card" data-diary-entry-id="06-30">
+                  <DiaryCardPressable className="flex flex-col gap-3" style={{
+                    paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                    background: 'rgba(255, 255, 255, 0.40)',
+                    boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                    borderRadius: 40,
+                    overflow: 'hidden', height: 263, flexShrink: 0,
+                    cursor: 'pointer',
+                  }}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                      <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月30日</span>
+                    </div>
+                    <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                      上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                    </div>
+                    <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                      <img src={publicAsset('img/diary/image (2).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                      <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                    </div>
+                  </DiaryCardPressable>
                 </FloatInItem>
 
                 {/* B5 — left */}
-                <FloatInItem index={2} kind="card" data-diary-entry-id="06-28" className="flex flex-col gap-3" style={{
-                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
-                  borderRadius: 40,
-                  overflow: 'hidden', height: 263, flexShrink: 0,
-                  cursor: 'pointer',
-                }}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
-                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月28日</span>
-                  </div>
-                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
-                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。
-                  </div>
-                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
-                    <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
-                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
-                  </div>
+                <FloatInItem index={2} kind="card" data-diary-entry-id="06-28">
+                  <DiaryCardPressable className="flex flex-col gap-3" style={{
+                    paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                    background: 'rgba(255, 255, 255, 0.40)',
+                    boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                    borderRadius: 40,
+                    overflow: 'hidden', height: 263, flexShrink: 0,
+                    cursor: 'pointer',
+                  }}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                      <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月28日</span>
+                    </div>
+                    <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                      上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。
+                    </div>
+                    <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                      <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                      <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                    </div>
+                  </DiaryCardPressable>
                 </FloatInItem>
               </div>
 
@@ -619,69 +666,75 @@ export default function App() {
                 }}
               >
                 {/* B1 — right */}
-                <FloatInItem index={0} kind="card" data-diary-entry-id="07-01" className="flex flex-col gap-3" style={{
-                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
-                  borderRadius: 40,
-                  overflow: 'hidden', height: 263, flexShrink: 0,
-                  cursor: 'pointer',
-                }}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
-                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>7月1日</span>
-                  </div>
-                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
-                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
-                  </div>
-                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
-                    <img src={publicAsset('img/diary/image (1).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
-                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
-                  </div>
+                <FloatInItem index={0} kind="card" data-diary-entry-id="07-01">
+                  <DiaryCardPressable className="flex flex-col gap-3" style={{
+                    paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                    background: 'rgba(255, 255, 255, 0.40)',
+                    boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                    borderRadius: 40,
+                    overflow: 'hidden', height: 263, flexShrink: 0,
+                    cursor: 'pointer',
+                  }}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                      <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>7月1日</span>
+                    </div>
+                    <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                      上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                    </div>
+                    <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                      <img src={publicAsset('img/diary/image (1).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                      <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                    </div>
+                  </DiaryCardPressable>
                 </FloatInItem>
 
                 {/* B2 — right */}
-                <FloatInItem index={1} kind="card" data-diary-entry-id="06-29" className="flex flex-col gap-3" style={{
-                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
-                  borderRadius: 40,
-                  overflow: 'hidden', height: 263, flexShrink: 0,
-                  cursor: 'pointer',
-                }}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
-                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月29日</span>
-                  </div>
-                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
-                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。
-                  </div>
-                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
-                    <img src={publicAsset('img/diary/image (3).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
-                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
-                  </div>
+                <FloatInItem index={1} kind="card" data-diary-entry-id="06-29">
+                  <DiaryCardPressable className="flex flex-col gap-3" style={{
+                    paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                    background: 'rgba(255, 255, 255, 0.40)',
+                    boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                    borderRadius: 40,
+                    overflow: 'hidden', height: 263, flexShrink: 0,
+                    cursor: 'pointer',
+                  }}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                      <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月29日</span>
+                    </div>
+                    <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                      上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。
+                    </div>
+                    <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                      <img src={publicAsset('img/diary/image (3).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                      <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                    </div>
+                  </DiaryCardPressable>
                 </FloatInItem>
 
                 {/* B4 — right */}
-                <FloatInItem index={2} kind="card" data-diary-entry-id="06-27" className="flex flex-col gap-3" style={{
-                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
-                  borderRadius: 40,
-                  overflow: 'hidden', height: 263, flexShrink: 0,
-                  cursor: 'pointer',
-                }}>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
-                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月27日</span>
-                  </div>
-                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
-                    陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
-                  </div>
-                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
-                    <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
-                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
-                  </div>
+                <FloatInItem index={2} kind="card" data-diary-entry-id="06-27">
+                  <DiaryCardPressable className="flex flex-col gap-3" style={{
+                    paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                    background: 'rgba(255, 255, 255, 0.40)',
+                    boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                    borderRadius: 40,
+                    overflow: 'hidden', height: 263, flexShrink: 0,
+                    cursor: 'pointer',
+                  }}>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                      <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月27日</span>
+                    </div>
+                    <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                      陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                    </div>
+                    <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                      <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                      <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                    </div>
+                  </DiaryCardPressable>
                 </FloatInItem>
               </div>
               </FloatInGroup>
