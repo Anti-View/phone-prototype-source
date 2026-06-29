@@ -26,11 +26,17 @@ function AppIcon({ label, src }: { label?: string; src?: string }) {
   )
 }
 
-function IconGrid({ labels }: { labels: [string, string, string, string] }) {
+function IconGrid({ labels, icons }: { labels?: [string, string, string, string]; icons?: [string, string, string, string] }) {
   return (
     <div className="w-[159px] h-[159px] flex flex-col gap-[31px] items-center justify-center">
-      <div className="flex gap-[31px]"><AppIcon label={labels[0]} /><AppIcon label={labels[1]} /></div>
-      <div className="flex gap-[31px]"><AppIcon label={labels[2]} /><AppIcon label={labels[3]} /></div>
+      <div className="flex gap-[31px]">
+        <AppIcon label={labels?.[0]} src={icons?.[0]} />
+        <AppIcon label={labels?.[1]} src={icons?.[1]} />
+      </div>
+      <div className="flex gap-[31px]">
+        <AppIcon label={labels?.[2]} src={icons?.[2]} />
+        <AppIcon label={labels?.[3]} src={icons?.[3]} />
+      </div>
     </div>
   )
 }
@@ -380,8 +386,18 @@ function Panel2() {
       <div className="w-[350px] h-[350px] bg-white relative" style={{ borderRadius: 28 }}>
         <img src={publicAsset('img/洞洞板_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} style={{ borderRadius: 28 }} />
       </div>
-      <div className="absolute left-0 top-[382px]"><IconGrid labels={['应用5', '应用6', '应用7', '应用8']} /></div>
-      <div className="absolute left-[191px] top-[382px]"><IconGrid labels={['应用9', '应用10', '应用11', '应用12']} /></div>
+      <div className="absolute left-0 top-[382px]"><IconGrid icons={[
+                publicAsset('img/app_icon/icon_17.png'),
+                publicAsset('img/app_icon/icon_18.png'),
+                publicAsset('img/app_icon/icon_19.png'),
+                publicAsset('img/app_icon/icon_20.png'),
+              ]} /></div>
+      <div className="absolute left-[191px] top-[382px]"><IconGrid icons={[
+                publicAsset('img/app_icon/icon_21.png'),
+                publicAsset('img/app_icon/icon_22.png'),
+                publicAsset('img/app_icon/icon_23.png'),
+                publicAsset('img/app_icon/icon_29.png'),
+              ]} /></div>
     </ContentPanel>
   )
 }
@@ -393,8 +409,18 @@ function Panel3() {
       <div className="w-[350px] h-[350px] relative">
         <img src={publicAsset('img/展柜_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
       </div>
-      <div className="absolute left-0 top-[382px]"><IconGrid labels={['应用17', '应用18', '应用19', '应用20']} /></div>
-      <div className="absolute left-[191px] top-[382px]"><IconGrid labels={['应用21', '应用22', '应用23', '应用24']} /></div>
+      <div className="absolute left-0 top-[382px]"><IconGrid icons={[
+                publicAsset('img/app_icon/icon_05.png'),
+                publicAsset('img/app_icon/icon_06.png'),
+                publicAsset('img/app_icon/icon_07.png'),
+                publicAsset('img/app_icon/icon_08.png'),
+              ]} /></div>
+      <div className="absolute left-[191px] top-[382px]"><IconGrid icons={[
+                publicAsset('img/app_icon/icon_09.png'),
+                publicAsset('img/app_icon/icon_10.png'),
+                publicAsset('img/app_icon/icon_13.png'),
+                publicAsset('img/app_icon/icon_14.png'),
+              ]} /></div>
     </ContentPanel>
   )
 }
