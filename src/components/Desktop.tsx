@@ -469,7 +469,7 @@ export default function Desktop({
   const CROSSFADE_MS = CROSSFADE_FRAMES * FRAME_MS
 
   const ANIM: Record<string, { duration: number; frames: number }> = {
-    '待机': { duration: 3993, frames: 121 },
+    '待机': { duration: 7920, frames: 240 },   // ping-pong: 121fwd + 119rev
     '吹气': { duration: 3234, frames: 97 },
     '点击': { duration: 3234, frames: 97 },
     '听音乐': { duration: 3993, frames: 121 },
