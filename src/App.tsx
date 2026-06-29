@@ -200,10 +200,8 @@ export default function App() {
             {/* Scrollable waterfall content */}
             <div
               ref={diaryScrollRef}
-              className="absolute inset-x-0 overflow-y-auto overflow-x-hidden overscroll-contain"
+              className="absolute inset-0 overflow-y-auto overflow-x-hidden overscroll-contain"
               style={{
-                top: 130,
-                bottom: 0,
                 touchAction: 'pan-y',
                 WebkitOverflowScrolling: 'touch',
               }}
@@ -217,6 +215,7 @@ export default function App() {
                 className="flex justify-center items-start"
                 style={{
                   gap: 16,
+                  paddingTop: 130,
                   paddingLeft: 16,
                   paddingRight: 16,
                   paddingBottom: 40,
