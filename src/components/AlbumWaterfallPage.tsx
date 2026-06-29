@@ -86,8 +86,6 @@ function PolaroidCard({
   top,
   rotation,
   revealIndex,
-  onPreview,
-  shouldSuppressPreview,
 }: {
   id: number
   color: string
@@ -96,8 +94,6 @@ function PolaroidCard({
   top: number
   rotation: number
   revealIndex: number
-  onPreview: (card: PreviewCard) => void
-  shouldSuppressPreview: () => boolean
 }) {
   return (
     <FloatInItem
@@ -106,18 +102,7 @@ function PolaroidCard({
       className="absolute"
       style={{ left, top }}
       layoutId={`polaroid-${id}`}
-      onClick={(e) => {
-        e.stopPropagation()
-
-        if (shouldSuppressPreview()) return
-
-        onPreview({
-          id,
-          color,
-          src,
-          rotation,
-        })
-      }}
+      data-polaroid-card-id={id}
     >
       <div style={{ cursor: 'pointer' }}>
         <PolaroidVisual
@@ -154,6 +139,8 @@ export default function AlbumWaterfallPage({
     lastY: 0,
     lastTime: 0,
     velocity: 0,
+    moved: false,
+    tapCardId: null as number | null,
   })
 
   const getStableRotation = (index: number) => {
@@ -189,6 +176,10 @@ export default function AlbumWaterfallPage({
         })
         .map((card, index) => [card.id, index]),
     )
+  }, [cards])
+
+  const cardsById = useMemo(() => {
+    return new Map(cards.map(card => [card.id, card]))
   }, [cards])
 
   const getMaxScroll = useCallback((el: HTMLDivElement) => {
@@ -304,13 +295,6 @@ export default function AlbumWaterfallPage({
     momentumRef.current = requestAnimationFrame(step)
   }, [getMaxScroll, resetRubberOffset])
 
-  const openPreview = useCallback((card: PreviewCard) => {
-    cancelMomentum()
-    cancelRubberReturn()
-    setRubberOffset(0)
-    setPreviewCard(card)
-  }, [cancelMomentum, cancelRubberReturn, setRubberOffset])
-
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
@@ -321,6 +305,10 @@ export default function AlbumWaterfallPage({
     const el = scrollRef.current
     if (!el) return
     if (el.scrollHeight <= el.clientHeight) return
+
+    const cardEl = target.closest<HTMLElement>('[data-polaroid-card-id]')
+    const tapCardIdValue = cardEl?.dataset.polaroidCardId
+    const tapCardId = tapCardIdValue == null ? null : Number(tapCardIdValue)
 
     cancelMomentum()
     cancelRubberReturn()
@@ -336,6 +324,8 @@ export default function AlbumWaterfallPage({
       lastY: e.clientY,
       lastTime: performance.now(),
       velocity: 0,
+      moved: false,
+      tapCardId: Number.isFinite(tapCardId) ? tapCardId : null,
     }
 
     el.setPointerCapture(e.pointerId)
@@ -361,6 +351,7 @@ export default function AlbumWaterfallPage({
     const totalDeltaY = e.clientY - state.startY
 
     if (Math.abs(totalDeltaY) > 5) {
+      state.moved = true
       suppressPreviewClickRef.current = true
     }
 
@@ -393,8 +384,29 @@ export default function AlbumWaterfallPage({
 
     const releaseVelocity = state.velocity
 
+    const wasTap = !state.moved && state.tapCardId !== null
+    const tappedCard = wasTap ? cardsById.get(state.tapCardId!) : null
+
     dragRef.current.active = false
     dragRef.current.pointerId = -1
+    dragRef.current.tapCardId = null
+    dragRef.current.moved = false
+
+    if (tappedCard) {
+      cancelMomentum()
+      cancelRubberReturn()
+      setRubberOffset(0)
+
+      setPreviewCard({
+        id: tappedCard.id,
+        color: tappedCard.color,
+        src: tappedCard.src,
+        rotation: tappedCard.rotation,
+      })
+
+      suppressPreviewClickRef.current = false
+      return
+    }
 
     const maxScroll = el ? getMaxScroll(el) : 0
     const atTop = !!el && el.scrollTop <= 0
@@ -416,7 +428,15 @@ export default function AlbumWaterfallPage({
     requestAnimationFrame(() => {
       suppressPreviewClickRef.current = false
     })
-  }, [resetRubberOffset, startMomentum, getMaxScroll])
+  }, [
+    resetRubberOffset,
+    startMomentum,
+    getMaxScroll,
+    cardsById,
+    cancelMomentum,
+    cancelRubberReturn,
+    setRubberOffset,
+  ])
 
   useEffect(() => {
     return () => {
@@ -513,8 +533,6 @@ export default function AlbumWaterfallPage({
                   top={card.top}
                   rotation={card.rotation}
                   revealIndex={rowRevealIndex}
-                  onPreview={openPreview}
-                  shouldSuppressPreview={() => suppressPreviewClickRef.current}
                 />
               )
             })}
