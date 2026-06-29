@@ -39,6 +39,7 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
         <div className="flex gap-[16px] w-max">
           <img src={publicAsset('img/主题详情页1.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
           <img src={publicAsset('img/主题详情页2.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
+          <img src={publicAsset('img/主题详情页3.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
         </div>
       </div>
 
