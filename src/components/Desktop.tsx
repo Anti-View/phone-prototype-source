@@ -173,7 +173,7 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
         // Center-crop to 1:1 square
         const size = Math.min(canvas.width, canvas.height)
-        const ox = (canvas.width - size) / 2
+        const ox = 0
         const oy = (canvas.height - size) / 2
         const square = document.createElement('canvas')
         square.width = size
@@ -250,13 +250,14 @@ function useTap(onTap: () => void) {
 }
 
 /* ── Panel 1 ── */
-function Panel1({ onWidgetClick, photos }: {
+function Panel1({ onWidgetClick, photos, onOpenDiary }: {
   onWidgetClick: (type: string, variant: IslandVariant) => void
   photos: string[]
+  onOpenDiary?: () => void
 }) {
   const tapA = useTap(() => onWidgetClick('album', 'wide'))
   const tapB = useTap(() => onWidgetClick('camera', 'square'))
-  const tapC = useTap(() => onWidgetClick('diary', 'wide'))
+  const tapC = useTap(() => onOpenDiary?.())
 
   return (
     <ContentPanel>
@@ -343,9 +344,9 @@ function Panel3() {
 }
 
 /* ── Desktop ── */
-interface DesktopProps { onOpenApp?: () => void }
+interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void }
 
-export default function Desktop({ onOpenApp }: DesktopProps) {
+export default function Desktop({ onOpenApp, onOpenDiary }: DesktopProps) {
   const [isLocked, setIsLocked] = useState(true)
   const [unlockedPage, setUnlockedPage] = useState(0)
   /* ── Dynamic Island: single instance, switched by widget tap ── */
@@ -606,7 +607,7 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         onDrag={handlePageDrag}
         onDragEnd={handlePageDragEnd}
       >
-        <div className="w-[402px] h-full flex-shrink-0"><Panel1 onWidgetClick={(type) => setActiveIsland(type as IslandType)} photos={polaroidPhotos} /></div>
+        <div className="w-[402px] h-full flex-shrink-0"><Panel1 onWidgetClick={(type) => setActiveIsland(type as IslandType)} photos={polaroidPhotos} onOpenDiary={onOpenDiary} /></div>
         <div className="w-[402px] h-full flex-shrink-0"><Panel2 /></div>
         <div className="w-[402px] h-full flex-shrink-0"><Panel3 /></div>
       </motion.div>

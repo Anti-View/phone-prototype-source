@@ -25,6 +25,7 @@ export default function App() {
     dismissToIdle,
     applyAndDismiss,
     goToDesktop,
+    openDiary,
   } = useAppState()
 
   const [toastVisible, setToastVisible] = useState(false)
@@ -41,22 +42,22 @@ export default function App() {
     if (result) showToast()
   }, [applyAndDismiss, showToast])
 
-  const themeActive = current !== 'desktop'
+  const pageActive = current !== 'desktop'
 
   return (
     <PhoneFrame>
       {/* ── Desktop — always rendered, shifts left when theme pushes in ── */}
       <motion.div
         className="absolute inset-0 z-0"
-        animate={{ x: themeActive ? -80 : 0 }}
+        animate={{ x: pageActive ? -80 : 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
       >
-        <Desktop onOpenApp={openTheme} />
+        <Desktop onOpenApp={openTheme} onOpenDiary={openDiary} />
       </motion.div>
 
       {/* ── Theme page — slides in from right ── */}
       <AnimatePresence>
-        {themeActive && (
+        {pageActive && (
           <motion.div
             key="theme-page"
             className="absolute inset-0 z-10"
@@ -118,6 +119,23 @@ export default function App() {
                 />
               )}
             </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Diary page — slides in from right ── */}
+      <AnimatePresence>
+        {current === 'diary' && (
+          <motion.div
+            key="diary-page"
+            className="absolute inset-0 z-10"
+            initial={{ x: 402 }}
+            animate={{ x: 0 }}
+            exit={{ x: 402 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
+          >
+            <div className="absolute inset-0 bg-white" />
+            <NavBar onHome={goToDesktop} />
           </motion.div>
         )}
       </AnimatePresence>
