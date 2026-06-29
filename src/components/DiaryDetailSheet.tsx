@@ -492,7 +492,7 @@ export default function DiaryDetailSheet({
               className="overflow-y-auto overscroll-contain"
               style={{
                 height: '100%',
-                paddingBottom: 0,
+                paddingBottom: 64,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 24,
