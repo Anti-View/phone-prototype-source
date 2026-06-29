@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'rea
 import { motion } from 'framer-motion'
 import type { DiaryEntry } from '../types/diary'
 import { publicAsset } from '../utils/assets'
+import { FloatInGroup, FloatInImage, FloatInItem } from './FloatIn'
 
 function InfoPill({ icon, text }: { icon: string; text: string }) {
   return (
@@ -61,65 +62,12 @@ export default function DiaryDetailSheet({
   const detailRubberOffsetRef = useRef(0)
   const detailRubberReturnRef = useRef<number | null>(null)
   const [showTopFade, setShowTopFade] = useState(false)
-  const [contentRevealReady, setContentRevealReady] = useState(false)
 
   const RUBBER_SPRING = 0.18
   const RUBBER_DAMPING = 0.72
   const MOMENTUM_TO_RUBBER = 0.42
   const RELEASE_TO_RUBBER = 0.35
   const DETAIL_BOTTOM_SAFE = 40
-
-  const revealContainerVariants: any = {
-    hidden: {},
-    show: {
-      transition: {
-        staggerChildren: 0.22,
-      },
-    },
-  }
-
-  const revealItemVariants: any = {
-    hidden: { opacity: 0, y: 28, filter: 'blur(4px)' },
-    show: {
-      opacity: 1,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: {
-        y: { type: 'spring' as const, stiffness: 105, damping: 22, mass: 1.18 },
-        opacity: { duration: 0.78, ease: [0.22, 1, 0.36, 1] as const },
-        filter: { duration: 0.82, ease: [0.22, 1, 0.36, 1] as const },
-      },
-    },
-  }
-
-  const revealTextVariants: any = {
-    hidden: { opacity: 0, y: 30, filter: 'blur(4px)' },
-    show: {
-      opacity: 0.65,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: {
-        y: { type: 'spring', stiffness: 100, damping: 22, mass: 1.2 },
-        opacity: { duration: 0.86, ease: [0.22, 1, 0.36, 1] },
-        filter: { duration: 0.86, ease: [0.22, 1, 0.36, 1] },
-      },
-    },
-  }
-
-  const revealImageVariants: any = {
-    hidden: { opacity: 0, y: 34, filter: 'blur(5px)' },
-    show: {
-      opacity: 1,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: {
-        delay: 0.34,
-        y: { type: 'spring', stiffness: 92, damping: 23, mass: 1.28 },
-        opacity: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
-        filter: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
-      },
-    },
-  }
 
   const updateTopFade = useCallback(() => {
     const el = detailScrollRef.current
@@ -368,18 +316,6 @@ export default function DiaryDetailSheet({
     setShowTopFade(false)
   }, [entry.id, cancelDetailMomentum, cancelDetailRubberReturn, setDetailRubberOffset])
 
-  useEffect(() => {
-    setContentRevealReady(false)
-
-    const timer = window.setTimeout(() => {
-      setContentRevealReady(true)
-    }, 420)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [entry.id])
-
   return (
     <>
       {/* Dark backdrop */}
@@ -423,15 +359,12 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* Real layout frame: 812px keeps internal flex math unchanged */}
-          <motion.div
-            className="w-full h-[812px] flex flex-col"
-            variants={revealContainerVariants}
-            initial="hidden"
-            animate={contentRevealReady ? 'show' : 'hidden'}
-          >
+          <div className="w-full h-[812px] flex flex-col">
+            <FloatInGroup startDelay={100} resetKey={entry.id} step={0.22}>
         {/* ── Top handle + controls ── */}
-        <motion.div
-          variants={revealItemVariants}
+        <FloatInItem
+          index={0}
+          kind="item"
           style={{
             paddingBottom: 10,
             display: 'flex',
@@ -513,7 +446,7 @@ export default function DiaryDetailSheet({
             <div style={{ width: 8, alignSelf: 'stretch', position: 'relative' }} />
             <div style={{ width: 36, height: 22, left: 183, top: 13, position: 'absolute' }} />
           </div>
-        </motion.div>
+        </FloatInItem>
 
         {/* ── Content area ── */}
         <div
@@ -534,8 +467,9 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* ── Header: date + time + pills + tags (fixed) ── */}
-          <motion.div
-            variants={revealItemVariants}
+          <FloatInItem
+            index={1}
+            kind="item"
             style={{
               alignSelf: 'stretch',
               display: 'flex',
@@ -608,13 +542,14 @@ export default function DiaryDetailSheet({
             >
               {entry.tags.map(tag => `#${tag}`).join('  ')}
             </div>
-          </motion.div>
+          </FloatInItem>
 
           {/* ── Player (fixed) ── */}
-          <motion.img
+          <FloatInImage
+            index={2}
+            kind="item"
             src={publicAsset('img/player.png')}
             alt=""
-            variants={revealItemVariants}
             style={{
               width: 354,
               height: 56,
@@ -680,8 +615,9 @@ export default function DiaryDetailSheet({
                 }}
               >
                 {/* Full text */}
-                <motion.div
-                  variants={revealTextVariants}
+                <FloatInItem
+                  index={3}
+                  kind="text"
                   style={{
                     alignSelf: 'stretch',
                     color: 'rgba(0, 0, 0, 0.90)',
@@ -692,13 +628,14 @@ export default function DiaryDetailSheet({
                     whiteSpace: 'pre-wrap',
                     flexShrink: 0,
                   }}
-                >{entry.fullText.trim()}</motion.div>
+                >{entry.fullText.trim()}</FloatInItem>
 
                 {/* Content image — delayed until sheet stabilises */}
-                <motion.img
+                <FloatInImage
+                  index={4}
+                  kind="image"
                   src={publicAsset('img/content_image.png')}
                   alt=""
-                  variants={revealImageVariants}
                   style={{
                     alignSelf: 'stretch',
                     height: 200,
@@ -721,7 +658,8 @@ export default function DiaryDetailSheet({
             </div>
           </div>
           </div>
-          </motion.div>
+            </FloatInGroup>
+          </div>
         </div>
       </motion.div>
     </>

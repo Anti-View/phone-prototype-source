@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, type PointerEvent } from 'react'
+import { FloatInGroup, FloatInItem } from './FloatIn'
 
 const pastelColors = [
   '#F4D8D8',
@@ -14,51 +15,65 @@ const pastelColors = [
 function PolaroidCard({
   color,
   src,
-  style,
+  left,
+  top,
+  rotation,
+  revealIndex,
 }: {
   color: string
   src?: string
-  style: React.CSSProperties
+  left: number
+  top: number
+  rotation: number
+  revealIndex: number
 }) {
   return (
-    <div
-      className="absolute bg-white"
-      style={{
-        width: 144,
-        height: 198,
-        paddingTop: 9,
-        paddingLeft: 9,
-        paddingRight: 9,
-        paddingBottom: 63,
-        boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.04)',
-        borderRadius: 6.55,
-        ...style,
-      }}
+    <FloatInItem
+      index={revealIndex}
+      kind="card"
+      className="absolute"
+      style={{ left, top }}
     >
       <div
+        className="bg-white"
         style={{
-          width: 126,
-          height: 126,
-          borderRadius: 3.27,
-          background: color,
-          overflow: 'hidden',
+          width: 144,
+          height: 198,
+          paddingTop: 9,
+          paddingLeft: 9,
+          paddingRight: 9,
+          paddingBottom: 63,
+          boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.04)',
+          borderRadius: 6.55,
+          transform: `rotate(${rotation}deg)`,
+          transformOrigin: 'center center',
         }}
       >
-        {src && (
-          <img
-            src={src}
-            alt=""
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
-            draggable={false}
-          />
-        )}
+        <div
+          style={{
+            width: 126,
+            height: 126,
+            borderRadius: 3.27,
+            background: color,
+            overflow: 'hidden',
+          }}
+        >
+          {src && (
+            <img
+              src={src}
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+              draggable={false}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </FloatInItem>
   )
 }
 
@@ -108,6 +123,17 @@ export default function AlbumWaterfallPage({
       }
     })
   }, [photos])
+
+  const cardRevealOrder = useMemo(() => {
+    return new Map(
+      [...cards]
+        .sort((a, b) => {
+          if (a.top !== b.top) return a.top - b.top
+          return a.left - b.left
+        })
+        .map((card, index) => [card.id, index]),
+    )
+  }, [cards])
 
   const getMaxScroll = useCallback((el: HTMLDivElement) => {
     return Math.max(0, el.scrollHeight - el.clientHeight)
@@ -399,19 +425,19 @@ export default function AlbumWaterfallPage({
             willChange: 'transform',
           }}
         >
-          {cards.map(card => (
-            <PolaroidCard
-              key={card.id}
-              color={card.color}
-              src={card.src}
-              style={{
-                left: card.left,
-                top: card.top,
-                transform: `rotate(${card.rotation}deg)`,
-                transformOrigin: 'center center',
-              }}
-            />
-          ))}
+          <FloatInGroup startDelay={100} resetKey={photos.length} step={0.09}>
+            {cards.map(card => (
+              <PolaroidCard
+                key={card.id}
+                color={card.color}
+                src={card.src}
+                left={card.left}
+                top={card.top}
+                rotation={card.rotation}
+                revealIndex={cardRevealOrder.get(card.id) ?? card.id}
+              />
+            ))}
+          </FloatInGroup>
         </div>
       </div>
     </div>

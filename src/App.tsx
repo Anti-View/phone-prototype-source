@@ -14,6 +14,7 @@ import { publicAsset } from './utils/assets'
 import { useAppState } from './hooks/useAppState'
 import DiaryDetailSheet from './components/DiaryDetailSheet'
 import AlbumWaterfallPage from './components/AlbumWaterfallPage'
+import { FloatInGroup, FloatInItem } from './components/FloatIn'
 import type { DiaryEntry } from './types/diary'
 
 const diaryDetailFullText = `今天下了一整天雨，已经是第三天了。我坐在小屋的窗台上，看那个雨滴一滴滴往下滑，滑到屏幕边缘就不见了。说实话有点看腻了，但是我又懒得去换，就让它下着吧。
@@ -534,6 +535,7 @@ export default function App() {
                   willChange: 'transform',
                 }}
               >
+              <FloatInGroup startDelay={100} resetKey={current} step={0.12}>
               {/* Left column */}
               <div
                 className="flex flex-col"
@@ -545,7 +547,7 @@ export default function App() {
                 }}
               >
                 {/* Card A */}
-                <div data-diary-entry-id="07-02" className="flex flex-col gap-3" style={{
+                <FloatInItem index={0} kind="card" data-diary-entry-id="07-02" className="flex flex-col gap-3" style={{
                   padding: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -559,10 +561,10 @@ export default function App() {
                   <div className="text-[14px] text-black/50 line-clamp-6" style={{ width: 120, fontFamily: 'PingFang SC, sans-serif' }}>
                     上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
                   </div>
-                </div>
+                </FloatInItem>
 
                 {/* B3 — left */}
-                <div data-diary-entry-id="06-30" className="flex flex-col gap-3" style={{
+                <FloatInItem index={2} kind="card" data-diary-entry-id="06-30" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -581,10 +583,10 @@ export default function App() {
                     <img src={publicAsset('img/diary/image (2).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
                     <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
                   </div>
-                </div>
+                </FloatInItem>
 
                 {/* B5 — left */}
-                <div data-diary-entry-id="06-28" className="flex flex-col gap-3" style={{
+                <FloatInItem index={4} kind="card" data-diary-entry-id="06-28" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -603,7 +605,7 @@ export default function App() {
                     <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
                     <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
                   </div>
-                </div>
+                </FloatInItem>
               </div>
 
               {/* Right column */}
@@ -617,7 +619,7 @@ export default function App() {
                 }}
               >
                 {/* B1 — right */}
-                <div data-diary-entry-id="07-01" className="flex flex-col gap-3" style={{
+                <FloatInItem index={1} kind="card" data-diary-entry-id="07-01" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -636,10 +638,10 @@ export default function App() {
                     <img src={publicAsset('img/diary/image (1).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
                     <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
                   </div>
-                </div>
+                </FloatInItem>
 
                 {/* B2 — right */}
-                <div data-diary-entry-id="06-29" className="flex flex-col gap-3" style={{
+                <FloatInItem index={3} kind="card" data-diary-entry-id="06-29" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -658,10 +660,10 @@ export default function App() {
                     <img src={publicAsset('img/diary/image (3).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
                     <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
                   </div>
-                </div>
+                </FloatInItem>
 
                 {/* B4 — right */}
-                <div data-diary-entry-id="06-27" className="flex flex-col gap-3" style={{
+                <FloatInItem index={5} kind="card" data-diary-entry-id="06-27" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -680,9 +682,10 @@ export default function App() {
                     <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
                     <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
                   </div>
-                </div>
+                </FloatInItem>
               </div>
-              </div>
+              </FloatInGroup>
+            </div>
             </div>
 
             {/* ── Diary detail sheet ── */}
