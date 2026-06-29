@@ -66,7 +66,7 @@ export default function DiaryDetailSheet({
   const RUBBER_DAMPING = 0.72
   const MOMENTUM_TO_RUBBER = 0.42
   const RELEASE_TO_RUBBER = 0.35
-  const DETAIL_BOTTOM_SAFE = 96
+  const DETAIL_BOTTOM_SAFE = 40
 
   const updateTopFade = useCallback(() => {
     const el = detailScrollRef.current
@@ -603,7 +603,6 @@ export default function DiaryDetailSheet({
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 24,
-                  paddingBottom: DETAIL_BOTTOM_SAFE,
                   willChange: 'transform',
                 }}
               >
