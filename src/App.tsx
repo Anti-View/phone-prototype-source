@@ -9,7 +9,6 @@ import GalleryPage from './components/GalleryPage'
 import LoadingCard from './components/LoadingCard'
 import ReadySheet from './components/ReadySheet'
 import SuccessToast from './components/SuccessToast'
-import DynamicIsland from './components/DynamicIsland'
 import Desktop from './components/Desktop'
 import { useAppState } from './hooks/useAppState'
 
@@ -28,7 +27,6 @@ export default function App() {
     goToDesktop,
   } = useAppState()
 
-  const [islandExpanded, setIslandExpanded] = useState(false)
   const [toastVisible, setToastVisible] = useState(false)
   const [toastKey, setToastKey] = useState(0)
 
@@ -126,13 +124,6 @@ export default function App() {
 
       {/* ── Global StatusBar ── */}
       <StatusBar />
-
-      {/* ── Dynamic Island ── */}
-      <DynamicIsland
-        expanded={islandExpanded}
-        variant="square"
-        onToggle={() => setIslandExpanded(prev => !prev)}
-      />
 
       {/* ── Success toast ── */}
       <SuccessToast key={toastKey} visible={toastVisible} />

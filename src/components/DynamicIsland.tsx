@@ -1,6 +1,5 @@
-import { type ReactNode, useRef, useEffect } from 'react'
+import { type ReactNode, type CSSProperties } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import CornerKit from '@cornerkit/core'
 
 export type IslandVariant = 'square' | 'wide'
 
@@ -12,35 +11,17 @@ const VARIANTS = {
 interface DynamicIslandProps {
   expanded: boolean
   variant?: IslandVariant
-  onToggle: () => void
+  onClose: () => void
   children?: ReactNode
+  style?: CSSProperties
 }
 
-export default function DynamicIsland({ expanded, variant = 'square', onToggle, children }: DynamicIslandProps) {
-  const elRef = useRef<HTMLDivElement>(null)
-  const ckRef = useRef<CornerKit | null>(null)
-
+export default function DynamicIsland({ expanded, variant = 'square', onClose, children, style }: DynamicIslandProps) {
   const v = VARIANTS[variant]
 
-  useEffect(() => {
-    ckRef.current = new CornerKit({ smoothing: 0.6 })
-    return () => { ckRef.current?.destroy() }
-  }, [])
-
-  useEffect(() => {
-    const el = elRef.current
-    const ck = ckRef.current
-    if (!el || !ck) return
-
-    if (expanded) {
-      ck.apply(el, { radius: v.radius, smoothing: 0.6 })
-    } else {
-      try { ck.remove(el) } catch {}
-    }
-  }, [expanded, v.radius])
-
   return (
-    <div className="absolute inset-0 pointer-events-none z-50">
+    <div className="absolute inset-0 pointer-events-none" style={{ zIndex: expanded ? 50 : 40 }}>
+      {/* Backdrop — tap to dismiss */}
       <AnimatePresence>
         {expanded && (
           <motion.div
@@ -49,16 +30,16 @@ export default function DynamicIsland({ expanded, variant = 'square', onToggle, 
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            onClick={onToggle}
+            onClick={onClose}
           />
         )}
       </AnimatePresence>
 
+      {/* Island shell */}
       <motion.div
-        ref={elRef}
-        layout
+        className="absolute pointer-events-auto overflow-hidden bg-black"
         initial={false}
-        className="absolute pointer-events-auto cursor-pointer bg-black overflow-hidden"
+        style={style}
         animate={{
           left: expanded ? v.left : 186,
           top: 16,
@@ -71,15 +52,14 @@ export default function DynamicIsland({ expanded, variant = 'square', onToggle, 
             ? { type: 'spring', stiffness: 170, damping: 18, mass: 1 }
             : { type: 'spring', stiffness: 260, damping: 32, mass: 1 }
         }
-        onClick={() => { if (!expanded) onToggle() }}
       >
+        {/* UI content — fades in + slight elastic scale after shell expands */}
         {expanded && (
           <motion.div
-            className="flex flex-col items-center gap-[10px]"
-            style={{ padding: '32px 4px 4px 4px' }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.2 }}
+            className="w-full h-full"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 25, mass: 0.8 }}
           >
             {children}
           </motion.div>

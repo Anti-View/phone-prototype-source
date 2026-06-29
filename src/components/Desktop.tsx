@@ -1,6 +1,5 @@
-import { useState, useEffect, useRef, memo } from 'react'
+import { useState, useEffect, useRef, useCallback, memo, type CSSProperties, type ReactNode } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate, animate } from 'framer-motion'
-import CornerKit from '@cornerkit/core'
 import DynamicIsland, { type IslandVariant } from './DynamicIsland'
 import { publicAsset } from '../utils/assets'
 
@@ -17,7 +16,7 @@ const DOCK_BLUR_PAD = 28
 
 function AppIcon({ label, src }: { label?: string; src?: string }) {
   return (
-    <div data-squircle data-squircle-radius="16" data-squircle-smoothing="0.6" className="w-[64px] h-[64px] bg-white flex-shrink-0 relative overflow-hidden flex items-center justify-center">
+    <div className="w-[64px] h-[64px] bg-white flex-shrink-0 relative overflow-hidden flex items-center justify-center" style={{ borderRadius: 16 }}>
       {src ? (
         <img src={src} alt="" className="w-full h-full object-cover" draggable={false} />
       ) : label ? (
@@ -133,6 +132,110 @@ function GlassIcon({ char }: { char: string }) {
   )
 }
 
+/* ── Camera island — live feed, capture, flash animation ── */
+function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [fallback, setFallback] = useState(false)
+  const [flash, setFlash] = useState(false)
+
+  // Camera init + cleanup
+  useEffect(() => {
+    let stream: MediaStream | null = null
+    const start = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream
+          videoRef.current.play()
+        }
+      } catch {
+        setFallback(true)
+      }
+    }
+    start()
+    return () => {
+      stream?.getTracks().forEach(t => t.stop())
+    }
+  }, [])
+
+  const shutter = () => {
+    if (flash) return
+    // Capture frame before flash
+    const video = videoRef.current
+    if (video && video.videoWidth) {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.translate(canvas.width, 0)
+        ctx.scale(-1, 1)
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        // Center-crop to 1:1 square
+        const size = Math.min(canvas.width, canvas.height)
+        const ox = (canvas.width - size) / 2
+        const oy = (canvas.height - size) / 2
+        const square = document.createElement('canvas')
+        square.width = size
+        square.height = size
+        square.getContext('2d')!.drawImage(canvas, ox, oy, size, size, 0, 0, size, size)
+        onCapture(square.toDataURL('image/jpeg', 0.9))
+      }
+    }
+    // Flash animation
+    setFlash(true)
+    setTimeout(() => setFlash(false), 50)
+  }
+
+  return (
+    <div className="flex flex-col items-center" style={{ width: 220, paddingTop: 22, margin: '0 auto', gap: 6 }}>
+      {/* Viewfinder */}
+      <motion.div
+        className="w-full flex-shrink-0 overflow-hidden relative"
+        style={{ height: 164, background: '#c3c3c3', borderRadius: 36 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.25, ease: 'easeOut' }}
+      >
+        {fallback ? (
+          <img src={publicAsset('img/camera/fallback.png')} alt="" className="w-full h-full object-cover" draggable={false} />
+        ) : (
+          <video ref={videoRef} className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} muted playsInline />
+        )}
+        {/* Black flash */}
+        {flash && (
+          <div className="absolute inset-0 bg-black z-10" />
+        )}
+        {/* Pet sticker — appears after viewfinder animation ends */}
+        <motion.img
+          src={publicAsset('videos/待机.gif')}
+          alt=""
+          className="absolute"
+          style={{ top: 40, right: 80, width: 178, height: 178, rotate: '15deg' }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.52, type: 'spring', stiffness: 120, damping: 12, mass: 1.2 }}
+          draggable={false}
+        />
+      </motion.div>
+
+      {/* Button row */}
+      <motion.div
+        className="flex items-center gap-[26px] flex-shrink-0"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.25, ease: 'easeOut' }}
+      >
+        <img src={publicAsset('img/camera/left.png')} alt="" className="w-[28px] h-[28px] object-cover" draggable={false} />
+        <div className="cursor-pointer active:scale-90 transition-transform" onClick={shutter}>
+          <img src={publicAsset('img/camera/middle.png')} alt="" className="w-[76px] h-[56px] object-cover" draggable={false} />
+        </div>
+        <img src={publicAsset('img/camera/right.png')} alt="" className="w-[28px] h-[28px] object-cover" draggable={false} />
+      </motion.div>
+    </div>
+  )
+}
+
 /* ── Tap vs drag helper ── */
 function useTap(onTap: () => void) {
   const pos = useRef({ x: 0, y: 0 })
@@ -147,7 +250,10 @@ function useTap(onTap: () => void) {
 }
 
 /* ── Panel 1 ── */
-function Panel1({ onWidgetClick }: { onWidgetClick: (type: string, variant: IslandVariant) => void }) {
+function Panel1({ onWidgetClick, photos }: {
+  onWidgetClick: (type: string, variant: IslandVariant) => void
+  photos: string[]
+}) {
   const tapA = useTap(() => onWidgetClick('album', 'wide'))
   const tapB = useTap(() => onWidgetClick('camera', 'square'))
   const tapC = useTap(() => onWidgetClick('diary', 'wide'))
@@ -155,7 +261,7 @@ function Panel1({ onWidgetClick }: { onWidgetClick: (type: string, variant: Isla
   return (
     <ContentPanel>
       <div className="flex flex-col gap-[32px]">
-        <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[350px] h-[159px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" {...tapA}>
+        <div className="w-[350px] h-[159px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" style={{ borderRadius: 28 }} {...tapA}>
           {/* Layer 4: 底层 */}
           <img src={publicAsset('img/小组件A/底层.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
           {/* Layer 3: 染色层 */}
@@ -169,7 +275,7 @@ function Panel1({ onWidgetClick }: { onWidgetClick: (type: string, variant: Isla
                 style={{ transform: `rotate(${[12, -7, 6][idx]}deg)` }}
               >
                 <img
-                  src={publicAsset(`img/小组件A/照片${i}.png`)}
+                  src={photos[i - 1] || publicAsset(`img/小组件A/照片${i}.png`)}
                   alt=""
                   className="absolute rounded-[2px]"
                   style={{ left: 5.5, top: 5.5, width: 77, height: 77 }}
@@ -182,10 +288,10 @@ function Panel1({ onWidgetClick }: { onWidgetClick: (type: string, variant: Isla
           <img src={publicAsset('img/小组件A/高光层.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
         </div>
         <div className="flex gap-[32px]">
-          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] bg-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" {...tapB}>
+          <div className="w-[159px] h-[159px] bg-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" style={{ borderRadius: 28 }} {...tapB}>
             <img src={publicAsset('img/小组件B.png')} alt="" className="w-full h-full object-cover" draggable={false} />
           </div>
-          <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[159px] h-[159px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" {...tapC}>
+          <div className="w-[159px] h-[159px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform" style={{ borderRadius: 28 }} {...tapC}>
             <img src={publicAsset('img/小组件C.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
             <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
               <div className="px-[28px] pt-[28px]">
@@ -214,7 +320,7 @@ function Panel1({ onWidgetClick }: { onWidgetClick: (type: string, variant: Isla
 function Panel2() {
   return (
     <ContentPanel>
-      <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[350px] h-[350px] bg-white relative">
+      <div className="w-[350px] h-[350px] bg-white relative" style={{ borderRadius: 28 }}>
         <WidgetLabel label="小组件E" />
       </div>
       <div className="absolute left-0 top-[382px]"><IconGrid labels={['应用5', '应用6', '应用7', '应用8']} /></div>
@@ -227,7 +333,7 @@ function Panel2() {
 function Panel3() {
   return (
     <ContentPanel>
-      <div data-squircle data-squircle-radius="28" data-squircle-smoothing="0.6" className="w-[350px] h-[350px] bg-white relative">
+      <div className="w-[350px] h-[350px] bg-white relative" style={{ borderRadius: 28 }}>
         <WidgetLabel label="小组件E" />
       </div>
       <div className="absolute left-0 top-[382px]"><IconGrid labels={['应用17', '应用18', '应用19', '应用20']} /></div>
@@ -242,8 +348,22 @@ interface DesktopProps { onOpenApp?: () => void }
 export default function Desktop({ onOpenApp }: DesktopProps) {
   const [isLocked, setIsLocked] = useState(true)
   const [unlockedPage, setUnlockedPage] = useState(0)
-  const [islands, setIslands] = useState<Record<string, boolean>>({})
-  const ckRef = useRef<CornerKit | null>(null)
+  /* ── Dynamic Island: single instance, switched by widget tap ── */
+  type IslandType = 'album' | 'camera' | 'diary'
+  const [activeIsland, setActiveIsland] = useState<IslandType | null>(null)
+
+  /* ── Polaroid photos — camera captures fill in widget A's three slots ── */
+  const [polaroidPhotos, setPolaroidPhotos] = useState<string[]>([])
+  const polaroidIndexRef = useRef(0)
+
+  const handleCapture = useCallback((dataURL: string) => {
+    setPolaroidPhotos(prev => {
+      const next = [...prev]
+      next[polaroidIndexRef.current] = dataURL
+      return next
+    })
+    polaroidIndexRef.current = (polaroidIndexRef.current + 1) % 3
+  }, [])
 
   /* ── Character animation state (durations from actual WebP files in public/videos/) ── */
   const ANIM: Record<string, number> = {
@@ -314,14 +434,6 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
   const lockFade = useMotionValue(1)
   const displayOpacity = useTransform([unlockOpacity, lockFade], ([uo, lf]: number[]) => uo * lf)
 
-  useEffect(() => {
-    ckRef.current = new CornerKit({ smoothing: 0.6 })
-    ckRef.current.auto()
-    return () => ckRef.current?.destroy()
-  }, [])
-
-  useEffect(() => { ckRef.current?.auto() }, [unlockedPage])
-
   const lgRef = useRef<any>(null)
   const [lgFailed, setLgFailed] = useState(() =>
     typeof window !== 'undefined' && 'ontouchstart' in window,
@@ -342,7 +454,7 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         const dockEl = document.querySelector('[data-glass="dock"]') as HTMLElement | null
         if (!dockEl) return
         dockEl.dataset.config = JSON.stringify({
-          blurAmount: 0.05, refraction: 0.5, chromAberration: 0.05,
+          blurAmount: 0.5, refraction: 0.5, chromAberration: 0.05,
           edgeHighlight: 0.15, specular: 0, fresnel: 1, distortion: 0,
           cornerRadius: 40, zRadius: 40, opacity: 1, saturation: 0,
           brightness: 0, shadowOpacity: 0, shadowSpread: 10, bevelMode: 0,
@@ -494,7 +606,7 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         onDrag={handlePageDrag}
         onDragEnd={handlePageDragEnd}
       >
-        <div className="w-[402px] h-full flex-shrink-0"><Panel1 onWidgetClick={(type) => setIslands(p => ({ ...p, [type]: true }))} /></div>
+        <div className="w-[402px] h-full flex-shrink-0"><Panel1 onWidgetClick={(type) => setActiveIsland(type as IslandType)} photos={polaroidPhotos} /></div>
         <div className="w-[402px] h-full flex-shrink-0"><Panel2 /></div>
         <div className="w-[402px] h-full flex-shrink-0"><Panel3 /></div>
       </motion.div>
@@ -571,22 +683,30 @@ export default function Desktop({ onOpenApp }: DesktopProps) {
         </motion.div>
       )}
 
-      {/* ── Dynamic Islands (one per widget, independent) ── */}
-      <DynamicIsland
-        expanded={!!islands['album']}
-        variant="wide"
-        onToggle={() => setIslands(p => ({ ...p, album: !p.album }))}
-      />
-      <DynamicIsland
-        expanded={!!islands['camera']}
-        variant="square"
-        onToggle={() => setIslands(p => ({ ...p, camera: !p.camera }))}
-      />
-      <DynamicIsland
-        expanded={!!islands['diary']}
-        variant="wide"
-        onToggle={() => setIslands(p => ({ ...p, diary: !p.diary }))}
-      />
+      {/* ── Dynamic Island — single instance, content switched by activeIsland ── */}
+      {(() => {
+        const cfg = activeIsland && ({
+          album:  { variant: 'wide' as const,   style: {} as CSSProperties, content: null as ReactNode },
+          camera: { variant: 'square' as const, style: { background: '#191B1D', boxShadow: 'inset 0 0 0 12px #000000' } as CSSProperties, content: <CameraIsland onCapture={handleCapture} /> as ReactNode },
+          diary:  { variant: 'wide' as const,   style: {} as CSSProperties, content: null as ReactNode },
+        })[activeIsland!]
+        return cfg ? (
+          <DynamicIsland
+            expanded={true}
+            variant={cfg.variant}
+            style={cfg.style}
+            onClose={() => setActiveIsland(null)}
+          >
+            {cfg.content}
+          </DynamicIsland>
+        ) : (
+          <DynamicIsland
+            expanded={false}
+            variant="square"
+            onClose={() => {}}
+          />
+        )
+      })()}
     </div>
   )
 }
