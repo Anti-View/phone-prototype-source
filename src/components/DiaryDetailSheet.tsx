@@ -236,21 +236,23 @@ export default function DiaryDetailSheet({
         onClick={onClose}
       />
 
-      {/* Bottom sheet — tween, no overshoot */}
-      <motion.div
-        className="absolute left-0 right-0 top-[62px] bottom-0 bg-white rounded-t-[38px] z-[60] flex flex-col overflow-hidden"
-        style={{
-          boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
-          fontFamily: 'var(--font-ui)',
-        }}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{
-          type: 'tween',
-          duration: 0.42,
-          ease: [0.22, 1, 0.36, 1],
-        }}
+      {/* Sheet viewport — clips overshoot, never exposes bottom */}
+      <div className="absolute left-0 right-0 top-[62px] bottom-0 z-[60] overflow-hidden pointer-events-none">
+        <motion.div
+          className="w-full h-full bg-white rounded-t-[38px] flex flex-col overflow-hidden pointer-events-auto"
+          style={{
+            boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
+            fontFamily: 'var(--font-ui)',
+          }}
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 32,
+            mass: 1,
+          }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Top handle + controls ── */}
@@ -525,6 +527,7 @@ export default function DiaryDetailSheet({
           </div>
         </div>
       </motion.div>
+      </div>
     </>
   )
 }
