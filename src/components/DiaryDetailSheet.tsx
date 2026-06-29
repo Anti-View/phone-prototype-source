@@ -61,6 +61,7 @@ export default function DiaryDetailSheet({
   const detailRubberOffsetRef = useRef(0)
   const detailRubberReturnRef = useRef<number | null>(null)
   const [showTopFade, setShowTopFade] = useState(false)
+  const [contentRevealReady, setContentRevealReady] = useState(false)
 
   const RUBBER_SPRING = 0.18
   const RUBBER_DAMPING = 0.72
@@ -68,46 +69,56 @@ export default function DiaryDetailSheet({
   const RELEASE_TO_RUBBER = 0.35
   const DETAIL_BOTTOM_SAFE = 40
 
-  const REVEAL_BASE_DELAY = 0.16
-  const REVEAL_STEP = 0.13
-
-  const revealItemVariants = {
-    hidden: { opacity: 0, y: 22 },
-    show: (index = 0) => ({
-      opacity: 1,
-      y: 0,
+  const revealContainerVariants: any = {
+    hidden: {},
+    show: {
       transition: {
-        delay: REVEAL_BASE_DELAY + index * REVEAL_STEP,
-        y: { type: 'spring', stiffness: 180, damping: 24, mass: 0.9 },
-        opacity: { duration: 0.48, ease: [0.22, 1, 0.36, 1] },
+        staggerChildren: 0.22,
       },
-    }),
+    },
   }
 
-  const revealTextVariants = {
-    hidden: { opacity: 0, y: 22 },
-    show: (index = 0) => ({
+  const revealItemVariants: any = {
+    hidden: { opacity: 0, y: 28, filter: 'blur(4px)' },
+    show: {
+      opacity: 1,
+      y: 0,
+      filter: 'blur(0px)',
+      transition: {
+        y: { type: 'spring' as const, stiffness: 105, damping: 22, mass: 1.18 },
+        opacity: { duration: 0.78, ease: [0.22, 1, 0.36, 1] as const },
+        filter: { duration: 0.82, ease: [0.22, 1, 0.36, 1] as const },
+      },
+    },
+  }
+
+  const revealTextVariants: any = {
+    hidden: { opacity: 0, y: 30, filter: 'blur(4px)' },
+    show: {
       opacity: 0.65,
       y: 0,
+      filter: 'blur(0px)',
       transition: {
-        delay: REVEAL_BASE_DELAY + index * REVEAL_STEP,
-        y: { type: 'spring', stiffness: 180, damping: 24, mass: 0.9 },
-        opacity: { duration: 0.52, ease: [0.22, 1, 0.36, 1] },
+        y: { type: 'spring', stiffness: 100, damping: 22, mass: 1.2 },
+        opacity: { duration: 0.86, ease: [0.22, 1, 0.36, 1] },
+        filter: { duration: 0.86, ease: [0.22, 1, 0.36, 1] },
       },
-    }),
+    },
   }
 
-  const revealImageVariants = {
-    hidden: { opacity: 0, y: 26 },
-    show: (index = 0) => ({
+  const revealImageVariants: any = {
+    hidden: { opacity: 0, y: 34, filter: 'blur(5px)' },
+    show: {
       opacity: 1,
       y: 0,
+      filter: 'blur(0px)',
       transition: {
-        delay: REVEAL_BASE_DELAY + index * REVEAL_STEP + 0.14,
-        y: { type: 'spring', stiffness: 160, damping: 25, mass: 1 },
-        opacity: { duration: 0.58, ease: [0.22, 1, 0.36, 1] },
+        delay: 0.34,
+        y: { type: 'spring', stiffness: 92, damping: 23, mass: 1.28 },
+        opacity: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
+        filter: { duration: 0.95, ease: [0.22, 1, 0.36, 1] },
       },
-    }),
+    },
   }
 
   const updateTopFade = useCallback(() => {
@@ -357,6 +368,18 @@ export default function DiaryDetailSheet({
     setShowTopFade(false)
   }, [entry.id, cancelDetailMomentum, cancelDetailRubberReturn, setDetailRubberOffset])
 
+  useEffect(() => {
+    setContentRevealReady(false)
+
+    const timer = window.setTimeout(() => {
+      setContentRevealReady(true)
+    }, 420)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
+  }, [entry.id])
+
   return (
     <>
       {/* Dark backdrop */}
@@ -400,13 +423,15 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* Real layout frame: 812px keeps internal flex math unchanged */}
-          <div className="w-full h-[812px] flex flex-col">
+          <motion.div
+            className="w-full h-[812px] flex flex-col"
+            variants={revealContainerVariants}
+            initial="hidden"
+            animate={contentRevealReady ? 'show' : 'hidden'}
+          >
         {/* ── Top handle + controls ── */}
         <motion.div
           variants={revealItemVariants}
-          initial="hidden"
-          animate="show"
-          custom={0}
           style={{
             paddingBottom: 10,
             display: 'flex',
@@ -511,9 +536,6 @@ export default function DiaryDetailSheet({
           {/* ── Header: date + time + pills + tags (fixed) ── */}
           <motion.div
             variants={revealItemVariants}
-            initial="hidden"
-            animate="show"
-            custom={1}
             style={{
               alignSelf: 'stretch',
               display: 'flex',
@@ -593,9 +615,6 @@ export default function DiaryDetailSheet({
             src={publicAsset('img/player.png')}
             alt=""
             variants={revealItemVariants}
-            initial="hidden"
-            animate="show"
-            custom={2}
             style={{
               width: 354,
               height: 56,
@@ -663,9 +682,6 @@ export default function DiaryDetailSheet({
                 {/* Full text */}
                 <motion.div
                   variants={revealTextVariants}
-                  initial="hidden"
-                  animate="show"
-                  custom={3}
                   style={{
                     alignSelf: 'stretch',
                     color: 'rgba(0, 0, 0, 0.90)',
@@ -683,9 +699,6 @@ export default function DiaryDetailSheet({
                   src={publicAsset('img/content_image.png')}
                   alt=""
                   variants={revealImageVariants}
-                  initial="hidden"
-                  animate="show"
-                  custom={4}
                   style={{
                     alignSelf: 'stretch',
                     height: 200,
@@ -707,8 +720,8 @@ export default function DiaryDetailSheet({
               </div>
             </div>
           </div>
-        </div>
-        </div>
+          </div>
+          </motion.div>
         </div>
       </motion.div>
     </>
