@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, type PointerEvent } from 'react'
+import { useState, useCallback, useRef, useEffect, type PointerEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PhoneFrame from './components/PhoneFrame'
 import StatusBar from './components/StatusBar'
@@ -44,13 +44,104 @@ export default function App() {
   }, [applyAndDismiss, showToast])
 
   const diaryScrollRef = useRef<HTMLDivElement | null>(null)
+  const diaryContentRef = useRef<HTMLDivElement | null>(null)
+  const diaryMomentumRef = useRef<number | null>(null)
 
   const diaryDragRef = useRef({
     active: false,
     pointerId: -1,
     startY: 0,
     startScrollTop: 0,
+    lastY: 0,
+    lastTime: 0,
+    velocity: 0,
   })
+
+  const getMaxScroll = useCallback((el: HTMLDivElement) => {
+    return Math.max(0, el.scrollHeight - el.clientHeight)
+  }, [])
+
+  const setDiaryRubberOffset = useCallback((offset: number) => {
+    const content = diaryContentRef.current
+    if (!content) return
+    content.style.transform = `translateY(${offset}px)`
+  }, [])
+
+  const resetDiaryRubberOffset = useCallback(() => {
+    const content = diaryContentRef.current
+    if (!content) return
+
+    const currentTransform = content.style.transform
+    if (!currentTransform || currentTransform === 'translateY(0px)') {
+      content.style.transform = ''
+      return
+    }
+
+    content.animate(
+      [
+        { transform: currentTransform },
+        { transform: 'translateY(0px)' },
+      ],
+      {
+        duration: 420,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      },
+    )
+
+    content.style.transform = ''
+  }, [])
+
+  const cancelDiaryMomentum = useCallback(() => {
+    if (diaryMomentumRef.current !== null) {
+      cancelAnimationFrame(diaryMomentumRef.current)
+      diaryMomentumRef.current = null
+    }
+  }, [])
+
+  const startDiaryMomentum = useCallback((initialVelocity: number) => {
+    const el = diaryScrollRef.current
+    if (!el) return
+
+    let velocity = initialVelocity
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime)
+      lastTime = now
+
+      const maxScroll = getMaxScroll(el)
+      const next = el.scrollTop + velocity * dt
+
+      if (next < 0) {
+        el.scrollTop = 0
+        setDiaryRubberOffset(24)
+        resetDiaryRubberOffset()
+        diaryMomentumRef.current = null
+        return
+      }
+
+      if (next > maxScroll) {
+        el.scrollTop = maxScroll
+        setDiaryRubberOffset(-24)
+        resetDiaryRubberOffset()
+        diaryMomentumRef.current = null
+        return
+      }
+
+      el.scrollTop = next
+
+      velocity *= Math.pow(0.95, dt / 16.67)
+
+      if (Math.abs(velocity) < 0.02) {
+        diaryMomentumRef.current = null
+        return
+      }
+
+      diaryMomentumRef.current = requestAnimationFrame(step)
+    }
+
+    diaryMomentumRef.current = requestAnimationFrame(step)
+  }, [getMaxScroll, resetDiaryRubberOffset, setDiaryRubberOffset])
 
   const handleDiaryPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
@@ -63,15 +154,21 @@ export default function App() {
     if (!el) return
     if (el.scrollHeight <= el.clientHeight) return
 
+    cancelDiaryMomentum()
+    setDiaryRubberOffset(0)
+
     diaryDragRef.current = {
       active: true,
       pointerId: e.pointerId,
       startY: e.clientY,
       startScrollTop: el.scrollTop,
+      lastY: e.clientY,
+      lastTime: performance.now(),
+      velocity: 0,
     }
 
     el.setPointerCapture(e.pointerId)
-  }, [])
+  }, [cancelDiaryMomentum, setDiaryRubberOffset])
 
   const handleDiaryPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = diaryDragRef.current
@@ -81,11 +178,32 @@ export default function App() {
     const el = diaryScrollRef.current
     if (!el) return
 
-    const deltaY = e.clientY - state.startY
-    el.scrollTop = state.startScrollTop - deltaY
+    const now = performance.now()
+    const dt = Math.max(1, now - state.lastTime)
+    const dy = e.clientY - state.lastY
+
+    const instantVelocity = -dy / dt
+    state.velocity = state.velocity * 0.7 + instantVelocity * 0.3
+    state.lastY = e.clientY
+    state.lastTime = now
+
+    const totalDeltaY = e.clientY - state.startY
+    const rawScrollTop = state.startScrollTop - totalDeltaY
+    const maxScroll = getMaxScroll(el)
+
+    if (rawScrollTop < 0) {
+      el.scrollTop = 0
+      setDiaryRubberOffset(-rawScrollTop * 0.35)
+    } else if (rawScrollTop > maxScroll) {
+      el.scrollTop = maxScroll
+      setDiaryRubberOffset(-(rawScrollTop - maxScroll) * 0.35)
+    } else {
+      el.scrollTop = rawScrollTop
+      setDiaryRubberOffset(0)
+    }
 
     e.preventDefault()
-  }, [])
+  }, [getMaxScroll, setDiaryRubberOffset])
 
   const stopDiaryDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = diaryDragRef.current
@@ -99,7 +217,21 @@ export default function App() {
 
     diaryDragRef.current.active = false
     diaryDragRef.current.pointerId = -1
-  }, [])
+
+    resetDiaryRubberOffset()
+
+    const releaseVelocity = state.velocity
+
+    if (Math.abs(releaseVelocity) > 0.08) {
+      startDiaryMomentum(releaseVelocity)
+    }
+  }, [resetDiaryRubberOffset, startDiaryMomentum])
+
+  useEffect(() => {
+    return () => {
+      cancelDiaryMomentum()
+    }
+  }, [cancelDiaryMomentum])
 
   const pageActive = current !== 'desktop' && current !== 'diary'
 
@@ -212,6 +344,7 @@ export default function App() {
               onLostPointerCapture={stopDiaryDrag}
             >
               <div
+                ref={diaryContentRef}
                 className="flex justify-center items-start"
                 style={{
                   gap: 16,
@@ -220,6 +353,7 @@ export default function App() {
                   paddingRight: 16,
                   paddingBottom: 40,
                   minHeight: '100%',
+                  willChange: 'transform',
                 }}
               >
               {/* Left column */}
