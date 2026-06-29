@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, type PointerEvent } from 'react'
 import { publicAsset } from '../utils/assets'
-import { FloatInGroup, FloatInImage, FloatInItem } from './FloatIn'
+import { FloatInGroup, FloatInItem } from './FloatIn'
 
 interface ThemeDetailProps {
   onApply: () => void
@@ -278,54 +278,54 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
         </FloatInItem>
 
         {/* Preview Cards — pointer drag + momentum + rubber band */}
-        <div
-          ref={previewScrollRef}
-          className="absolute top-[258px] left-0 w-full overflow-x-auto overscroll-contain [&::-webkit-scrollbar]:hidden"
-          style={{
-            paddingLeft: 16,
-            paddingRight: 16,
-            cursor: 'grab',
-            touchAction: 'pan-x',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
-          onPointerDown={handlePreviewPointerDown}
-          onPointerMove={handlePreviewPointerMove}
-          onPointerUp={stopPreviewDrag}
-          onPointerCancel={stopPreviewDrag}
+        <FloatInItem
+          index={2}
+          kind="item"
+          className="absolute top-[258px] left-0 w-full"
         >
-          <div ref={previewContentRef} className="flex gap-[16px] w-max">
-            <FloatInImage
-              index={2}
-              kind="image"
-              src={publicAsset('img/主题详情页1.png')}
-              alt=""
-              className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken"
-              draggable={false}
-            />
-            <FloatInImage
-              index={3}
-              kind="image"
-              src={publicAsset('img/主题详情页2.png')}
-              alt=""
-              className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken"
-              draggable={false}
-            />
-            <FloatInImage
-              index={4}
-              kind="image"
-              src={publicAsset('img/主题详情页3.png')}
-              alt=""
-              className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken"
-              draggable={false}
-            />
+          <div
+            ref={previewScrollRef}
+            className="w-full overflow-x-auto overscroll-contain [&::-webkit-scrollbar]:hidden"
+            style={{
+              paddingLeft: 16,
+              paddingRight: 16,
+              cursor: 'grab',
+              touchAction: 'pan-x',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none',
+              msOverflowStyle: 'none',
+            }}
+            onPointerDown={handlePreviewPointerDown}
+            onPointerMove={handlePreviewPointerMove}
+            onPointerUp={stopPreviewDrag}
+            onPointerCancel={stopPreviewDrag}
+          >
+            <div ref={previewContentRef} className="flex gap-[16px] w-max">
+              <img
+                src={publicAsset('img/主题详情页1.png')}
+                alt=""
+                className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken"
+                draggable={false}
+              />
+              <img
+                src={publicAsset('img/主题详情页2.png')}
+                alt=""
+                className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken"
+                draggable={false}
+              />
+              <img
+                src={publicAsset('img/主题详情页3.png')}
+                alt=""
+                className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken"
+                draggable={false}
+              />
+            </div>
           </div>
-        </div>
+        </FloatInItem>
 
         {/* Content Description */}
         <FloatInItem
-          index={5}
+          index={3}
           kind="text"
           className="absolute left-4 top-[678px] flex flex-col gap-2"
           style={{ fontFamily: "var(--font-ui)" }}
@@ -346,7 +346,7 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
 
         {/* CTA Button — Figma shadow: 0px 8px 40px rgba(0,0,0,0.12) */}
         <FloatInItem
-          index={6}
+          index={4}
           kind="item"
           className="absolute left-4 right-4 bottom-8 flex justify-center"
         >
