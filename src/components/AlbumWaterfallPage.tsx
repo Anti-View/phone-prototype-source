@@ -11,7 +11,15 @@ const pastelColors = [
   '#F1E4D4',
 ]
 
-function PolaroidCard({ color, style }: { color: string; style: React.CSSProperties }) {
+function PolaroidCard({
+  color,
+  src,
+  style,
+}: {
+  color: string
+  src?: string
+  style: React.CSSProperties
+}) {
   return (
     <div
       className="absolute bg-white"
@@ -33,13 +41,34 @@ function PolaroidCard({ color, style }: { color: string; style: React.CSSPropert
           height: 126,
           borderRadius: 3.27,
           background: color,
+          overflow: 'hidden',
         }}
-      />
+      >
+        {src && (
+          <img
+            src={src}
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+            draggable={false}
+          />
+        )}
+      </div>
     </div>
   )
 }
 
-export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
+export default function AlbumWaterfallPage({
+  onBack,
+  photos,
+}: {
+  onBack: () => void
+  photos: string[]
+}) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const momentumRef = useRef<number | null>(null)
@@ -61,7 +90,9 @@ export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
   }
 
   const cards = useMemo(() => {
-    return Array.from({ length: 20 }, (_, index) => {
+    const placeholderCount = Math.max(20, photos.length)
+
+    return Array.from({ length: placeholderCount }, (_, index) => {
       const isLeft = index % 2 === 0
       const columnIndex = Math.floor(index / 2)
 
@@ -71,9 +102,10 @@ export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
         top: (isLeft ? 138 : 84) + columnIndex * 230,
         color: pastelColors[index % pastelColors.length],
         rotation: getStableRotation(index),
+        src: photos[index],
       }
     })
-  }, [])
+  }, [photos])
 
   const getMaxScroll = useCallback((el: HTMLDivElement) => {
     return Math.max(0, el.scrollHeight - el.clientHeight)
@@ -328,6 +360,7 @@ export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
             <PolaroidCard
               key={card.id}
               color={card.color}
+              src={card.src}
               style={{
                 left: card.left,
                 top: card.top,

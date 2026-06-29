@@ -390,9 +390,14 @@ function Panel3() {
 }
 
 /* ── Desktop ── */
-interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void; onOpenAlbum?: () => void }
+interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void; onOpenAlbum?: () => void; onAlbumCapture?: (dataURL: string) => void }
 
-export default function Desktop({ onOpenApp, onOpenDiary, onOpenAlbum }: DesktopProps) {
+export default function Desktop({
+  onOpenApp,
+  onOpenDiary,
+  onOpenAlbum,
+  onAlbumCapture,
+}: DesktopProps) {
   const [isLocked, setIsLocked] = useState(true)
   const [unlockedPage, setUnlockedPage] = useState(0)
   /* ── Dynamic Island: single instance, switched by widget tap ── */
@@ -409,8 +414,11 @@ export default function Desktop({ onOpenApp, onOpenDiary, onOpenAlbum }: Desktop
       next[polaroidIndexRef.current] = dataURL
       return next
     })
+
     polaroidIndexRef.current = (polaroidIndexRef.current + 1) % 3
-  }, [])
+
+    onAlbumCapture?.(dataURL)
+  }, [onAlbumCapture])
 
   /* ── Character animation state (durations from actual WebP files in public/videos/) ── */
   const ANIM: Record<string, number> = {

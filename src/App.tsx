@@ -110,6 +110,11 @@ export default function App() {
 
   const [toastVisible, setToastVisible] = useState(false)
   const [toastKey, setToastKey] = useState(0)
+  const [albumPhotos, setAlbumPhotos] = useState<string[]>([])
+
+  const handleAlbumCapture = useCallback((dataURL: string) => {
+    setAlbumPhotos(prev => [dataURL, ...prev].slice(0, 10))
+  }, [])
 
   const showToast = useCallback(() => {
     setToastKey(k => k + 1)
@@ -353,6 +358,7 @@ export default function App() {
           onOpenApp={openTheme}
           onOpenDiary={openDiary}
           onOpenAlbum={openAlbum}
+          onAlbumCapture={handleAlbumCapture}
         />
       </motion.div>
 
@@ -642,7 +648,10 @@ export default function App() {
             exit={{ x: 402 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
           >
-            <AlbumWaterfallPage onBack={goToDesktop} />
+            <AlbumWaterfallPage
+            onBack={goToDesktop}
+            photos={albumPhotos}
+          />
           </motion.div>
         )}
       </AnimatePresence>
