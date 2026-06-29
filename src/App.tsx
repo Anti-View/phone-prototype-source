@@ -140,20 +140,35 @@ export default function App() {
             {/* Fixed NavBar */}
             <NavBar onHome={goToDesktop} back />
             {/* Scrollable waterfall content */}
-            <div className="absolute inset-x-0 overflow-hidden" style={{ top: 130, bottom: 0 }}>
+            <div
+              className="absolute inset-x-0 overflow-y-auto overflow-x-hidden overscroll-contain"
+              style={{
+                top: 130,
+                bottom: 0,
+                touchAction: 'pan-y',
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
               <div
-                className="h-full overflow-y-auto overscroll-contain flex justify-center"
+                className="flex justify-center items-start"
                 style={{
                   gap: 16,
                   paddingLeft: 16,
                   paddingRight: 16,
                   paddingBottom: 40,
-                  touchAction: 'pan-y',
-                  WebkitOverflowScrolling: 'touch',
+                  minHeight: '100%',
                 }}
               >
               {/* Left column */}
-              <div className="flex flex-col" style={{ width: 177, gap: 24 }}>
+              <div
+                className="flex flex-col"
+                style={{
+                  width: 177,
+                  gap: 24,
+                  flexShrink: 0,
+                  alignSelf: 'flex-start',
+                }}
+              >
                 {/* Card A */}
                 <div className="flex flex-col gap-3" style={{
                   padding: 24,
@@ -210,7 +225,15 @@ export default function App() {
               </div>
 
               {/* Right column */}
-              <div className="flex flex-col" style={{ width: 177, gap: 24 }}>
+              <div
+                className="flex flex-col"
+                style={{
+                  width: 177,
+                  gap: 24,
+                  flexShrink: 0,
+                  alignSelf: 'flex-start',
+                }}
+              >
                 {/* B1 — right */}
                 <div className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,

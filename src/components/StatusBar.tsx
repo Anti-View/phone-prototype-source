@@ -1,7 +1,7 @@
 export default function StatusBar() {
   return (
     <div
-      className="absolute top-0 left-0 z-10 pointer-events-none inline-flex items-center justify-center"
+      className="absolute top-0 left-0 z-[80] pointer-events-none inline-flex items-center justify-center"
       style={{
         width: 402,
         paddingTop: 21,
