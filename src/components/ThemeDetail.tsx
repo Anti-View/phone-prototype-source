@@ -9,6 +9,8 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
   const previewScrollRef = useRef<HTMLDivElement | null>(null)
   const previewContentRef = useRef<HTMLDivElement | null>(null)
   const previewMomentumRef = useRef<number | null>(null)
+  const previewRubberOffsetRef = useRef(0)
+  const previewRubberReturnRef = useRef<number | null>(null)
 
   const previewDragRef = useRef({
     active: false,
@@ -24,35 +26,65 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
     return Math.max(0, el.scrollWidth - el.clientWidth)
   }, [])
 
-  const setPreviewRubberOffset = useCallback((offset: number) => {
-    const content = previewContentRef.current
-    if (!content) return
-    content.style.transform = `translateX(${offset}px)`
+  const RUBBER_SPRING = 0.18
+  const RUBBER_DAMPING = 0.72
+  const MOMENTUM_TO_RUBBER = 0.42
+  const RELEASE_TO_RUBBER = 0.35
+
+  const cancelPreviewRubberReturn = useCallback(() => {
+    if (previewRubberReturnRef.current !== null) {
+      cancelAnimationFrame(previewRubberReturnRef.current)
+      previewRubberReturnRef.current = null
+    }
   }, [])
 
-  const resetPreviewRubberOffset = useCallback(() => {
+  const setPreviewRubberOffset = useCallback((offset: number) => {
     const content = previewContentRef.current
+    previewRubberOffsetRef.current = offset
+
     if (!content) return
 
-    const currentTransform = content.style.transform
-    if (!currentTransform || currentTransform === 'translateX(0px)') {
+    if (Math.abs(offset) < 0.1) {
       content.style.transform = ''
       return
     }
 
-    content.animate(
-      [
-        { transform: currentTransform },
-        { transform: 'translateX(0px)' },
-      ],
-      {
-        duration: 420,
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      },
-    )
-
-    content.style.transform = ''
+    content.style.transform = `translateX(${offset}px)`
   }, [])
+
+  const resetPreviewRubberOffset = useCallback((initialVelocity = 0) => {
+    const content = previewContentRef.current
+    if (!content) return
+
+    cancelPreviewRubberReturn()
+
+    let offset = previewRubberOffsetRef.current
+    let velocity = initialVelocity * 16.67
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime) / 16.67
+      lastTime = now
+
+      velocity += -offset * RUBBER_SPRING * dt
+      velocity *= Math.pow(RUBBER_DAMPING, dt)
+      offset += velocity * dt
+
+      previewRubberOffsetRef.current = offset
+
+      if (Math.abs(offset) < 0.25 && Math.abs(velocity) < 0.25) {
+        previewRubberOffsetRef.current = 0
+        content.style.transform = ''
+        previewRubberReturnRef.current = null
+        return
+      }
+
+      content.style.transform = `translateX(${offset}px)`
+      previewRubberReturnRef.current = requestAnimationFrame(step)
+    }
+
+    previewRubberReturnRef.current = requestAnimationFrame(step)
+  }, [cancelPreviewRubberReturn])
 
   const cancelPreviewMomentum = useCallback(() => {
     if (previewMomentumRef.current !== null) {
@@ -77,16 +109,14 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
 
       if (next < 0) {
         el.scrollLeft = 0
-        setPreviewRubberOffset(24)
-        resetPreviewRubberOffset()
+        resetPreviewRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         previewMomentumRef.current = null
         return
       }
 
       if (next > maxScroll) {
         el.scrollLeft = maxScroll
-        setPreviewRubberOffset(-24)
-        resetPreviewRubberOffset()
+        resetPreviewRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         previewMomentumRef.current = null
         return
       }
@@ -103,7 +133,7 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
     }
 
     previewMomentumRef.current = requestAnimationFrame(step)
-  }, [getMaxPreviewScroll, resetPreviewRubberOffset, setPreviewRubberOffset])
+  }, [getMaxPreviewScroll, resetPreviewRubberOffset])
 
   const handlePreviewPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
@@ -117,6 +147,7 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
     if (el.scrollWidth <= el.clientWidth) return
 
     cancelPreviewMomentum()
+    cancelPreviewRubberReturn()
     setPreviewRubberOffset(0)
 
     previewDragRef.current = {
@@ -131,7 +162,7 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
 
     el.setPointerCapture(e.pointerId)
     el.style.cursor = 'grabbing'
-  }, [cancelPreviewMomentum, setPreviewRubberOffset])
+  }, [cancelPreviewMomentum, cancelPreviewRubberReturn, setPreviewRubberOffset])
 
   const handlePreviewPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = previewDragRef.current
@@ -187,18 +218,30 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
       el.style.cursor = ''
     }
 
-    resetPreviewRubberOffset()
+    const maxScroll = el ? getMaxPreviewScroll(el) : 0
+    const atLeft = !!el && el.scrollLeft <= 0
+    const atRight = !!el && el.scrollLeft >= maxScroll
+    const flingOutward =
+      (atLeft && releaseVelocity < 0) ||
+      (atRight && releaseVelocity > 0)
 
-    if (Math.abs(releaseVelocity) > 0.08) {
-      startPreviewMomentum(releaseVelocity)
+    if (flingOutward) {
+      resetPreviewRubberOffset(-releaseVelocity * RELEASE_TO_RUBBER)
+    } else {
+      resetPreviewRubberOffset()
+
+      if (Math.abs(releaseVelocity) > 0.08) {
+        startPreviewMomentum(releaseVelocity)
+      }
     }
-  }, [resetPreviewRubberOffset, startPreviewMomentum])
+  }, [resetPreviewRubberOffset, startPreviewMomentum, getMaxPreviewScroll])
 
   useEffect(() => {
     return () => {
       cancelPreviewMomentum()
+      cancelPreviewRubberReturn()
     }
-  }, [cancelPreviewMomentum])
+  }, [cancelPreviewMomentum, cancelPreviewRubberReturn])
 
   return (
     <div className="absolute inset-0 z-0 select-none">

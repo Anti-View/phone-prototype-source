@@ -149,6 +149,8 @@ export default function App() {
   const diaryScrollRef = useRef<HTMLDivElement | null>(null)
   const diaryContentRef = useRef<HTMLDivElement | null>(null)
   const diaryMomentumRef = useRef<number | null>(null)
+  const diaryRubberOffsetRef = useRef(0)
+  const diaryRubberReturnRef = useRef<number | null>(null)
 
   const diaryDragRef = useRef({
     active: false,
@@ -166,35 +168,65 @@ export default function App() {
     return Math.max(0, el.scrollHeight - el.clientHeight)
   }, [])
 
-  const setDiaryRubberOffset = useCallback((offset: number) => {
-    const content = diaryContentRef.current
-    if (!content) return
-    content.style.transform = `translateY(${offset}px)`
+  const RUBBER_SPRING = 0.18
+  const RUBBER_DAMPING = 0.72
+  const MOMENTUM_TO_RUBBER = 0.42
+  const RELEASE_TO_RUBBER = 0.35
+
+  const cancelDiaryRubberReturn = useCallback(() => {
+    if (diaryRubberReturnRef.current !== null) {
+      cancelAnimationFrame(diaryRubberReturnRef.current)
+      diaryRubberReturnRef.current = null
+    }
   }, [])
 
-  const resetDiaryRubberOffset = useCallback(() => {
+  const setDiaryRubberOffset = useCallback((offset: number) => {
     const content = diaryContentRef.current
+    diaryRubberOffsetRef.current = offset
+
     if (!content) return
 
-    const currentTransform = content.style.transform
-    if (!currentTransform || currentTransform === 'translateY(0px)') {
+    if (Math.abs(offset) < 0.1) {
       content.style.transform = ''
       return
     }
 
-    content.animate(
-      [
-        { transform: currentTransform },
-        { transform: 'translateY(0px)' },
-      ],
-      {
-        duration: 420,
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      },
-    )
-
-    content.style.transform = ''
+    content.style.transform = `translateY(${offset}px)`
   }, [])
+
+  const resetDiaryRubberOffset = useCallback((initialVelocity = 0) => {
+    const content = diaryContentRef.current
+    if (!content) return
+
+    cancelDiaryRubberReturn()
+
+    let offset = diaryRubberOffsetRef.current
+    let velocity = initialVelocity * 16.67
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime) / 16.67
+      lastTime = now
+
+      velocity += -offset * RUBBER_SPRING * dt
+      velocity *= Math.pow(RUBBER_DAMPING, dt)
+      offset += velocity * dt
+
+      diaryRubberOffsetRef.current = offset
+
+      if (Math.abs(offset) < 0.25 && Math.abs(velocity) < 0.25) {
+        diaryRubberOffsetRef.current = 0
+        content.style.transform = ''
+        diaryRubberReturnRef.current = null
+        return
+      }
+
+      content.style.transform = `translateY(${offset}px)`
+      diaryRubberReturnRef.current = requestAnimationFrame(step)
+    }
+
+    diaryRubberReturnRef.current = requestAnimationFrame(step)
+  }, [cancelDiaryRubberReturn])
 
   const cancelDiaryMomentum = useCallback(() => {
     if (diaryMomentumRef.current !== null) {
@@ -219,16 +251,14 @@ export default function App() {
 
       if (next < 0) {
         el.scrollTop = 0
-        setDiaryRubberOffset(24)
-        resetDiaryRubberOffset()
+        resetDiaryRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         diaryMomentumRef.current = null
         return
       }
 
       if (next > maxScroll) {
         el.scrollTop = maxScroll
-        setDiaryRubberOffset(-24)
-        resetDiaryRubberOffset()
+        resetDiaryRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         diaryMomentumRef.current = null
         return
       }
@@ -246,7 +276,7 @@ export default function App() {
     }
 
     diaryMomentumRef.current = requestAnimationFrame(step)
-  }, [getMaxScroll, resetDiaryRubberOffset, setDiaryRubberOffset])
+  }, [getMaxScroll, resetDiaryRubberOffset])
 
   const handleDiaryPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
@@ -263,6 +293,7 @@ export default function App() {
     const tapEntryId = card?.dataset.diaryEntryId ?? null
 
     cancelDiaryMomentum()
+    cancelDiaryRubberReturn()
     setDiaryRubberOffset(0)
 
     diaryDragRef.current = {
@@ -278,7 +309,7 @@ export default function App() {
     }
 
     el.setPointerCapture(e.pointerId)
-  }, [cancelDiaryMomentum, setDiaryRubberOffset])
+  }, [cancelDiaryMomentum, cancelDiaryRubberReturn, setDiaryRubberOffset])
 
   const handleDiaryPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = diaryDragRef.current
@@ -338,28 +369,41 @@ export default function App() {
     diaryDragRef.current.tapEntryId = null
     diaryDragRef.current.moved = false
 
-    resetDiaryRubberOffset()
-
     if (wasTap && tappedEntryId) {
       const entry = diaryEntries[tappedEntryId]
       if (entry) {
         cancelDiaryMomentum()
+        cancelDiaryRubberReturn()
         setDiaryRubberOffset(0)
         setSelectedDiaryEntry(entry)
       }
       return
     }
 
-    if (Math.abs(releaseVelocity) > 0.08) {
-      startDiaryMomentum(releaseVelocity)
+    const maxScroll = el ? getMaxScroll(el) : 0
+    const atTop = !!el && el.scrollTop <= 0
+    const atBottom = !!el && el.scrollTop >= maxScroll
+    const flingOutward =
+      (atTop && releaseVelocity < 0) ||
+      (atBottom && releaseVelocity > 0)
+
+    if (flingOutward) {
+      resetDiaryRubberOffset(-releaseVelocity * RELEASE_TO_RUBBER)
+    } else {
+      resetDiaryRubberOffset()
+
+      if (Math.abs(releaseVelocity) > 0.08) {
+        startDiaryMomentum(releaseVelocity)
+      }
     }
-  }, [resetDiaryRubberOffset, startDiaryMomentum, cancelDiaryMomentum, setDiaryRubberOffset])
+  }, [resetDiaryRubberOffset, startDiaryMomentum, cancelDiaryMomentum, cancelDiaryRubberReturn, setDiaryRubberOffset, getMaxScroll])
 
   useEffect(() => {
     return () => {
       cancelDiaryMomentum()
+      cancelDiaryRubberReturn()
     }
-  }, [cancelDiaryMomentum])
+  }, [cancelDiaryMomentum, cancelDiaryRubberReturn])
 
   const pageActive = current !== 'desktop' && current !== 'diary' && current !== 'album'
 

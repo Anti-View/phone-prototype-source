@@ -72,6 +72,8 @@ export default function AlbumWaterfallPage({
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const momentumRef = useRef<number | null>(null)
+  const rubberOffsetRef = useRef(0)
+  const rubberReturnRef = useRef<number | null>(null)
 
   const dragRef = useRef({
     active: false,
@@ -111,35 +113,65 @@ export default function AlbumWaterfallPage({
     return Math.max(0, el.scrollHeight - el.clientHeight)
   }, [])
 
-  const setRubberOffset = useCallback((offset: number) => {
-    const content = contentRef.current
-    if (!content) return
-    content.style.transform = `translateY(${offset}px)`
+  const RUBBER_SPRING = 0.18
+  const RUBBER_DAMPING = 0.72
+  const MOMENTUM_TO_RUBBER = 0.42
+  const RELEASE_TO_RUBBER = 0.35
+
+  const cancelRubberReturn = useCallback(() => {
+    if (rubberReturnRef.current !== null) {
+      cancelAnimationFrame(rubberReturnRef.current)
+      rubberReturnRef.current = null
+    }
   }, [])
 
-  const resetRubberOffset = useCallback(() => {
+  const setRubberOffset = useCallback((offset: number) => {
     const content = contentRef.current
+    rubberOffsetRef.current = offset
+
     if (!content) return
 
-    const currentTransform = content.style.transform
-    if (!currentTransform || currentTransform === 'translateY(0px)') {
+    if (Math.abs(offset) < 0.1) {
       content.style.transform = ''
       return
     }
 
-    content.animate(
-      [
-        { transform: currentTransform },
-        { transform: 'translateY(0px)' },
-      ],
-      {
-        duration: 420,
-        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
-      },
-    )
-
-    content.style.transform = ''
+    content.style.transform = `translateY(${offset}px)`
   }, [])
+
+  const resetRubberOffset = useCallback((initialVelocity = 0) => {
+    const content = contentRef.current
+    if (!content) return
+
+    cancelRubberReturn()
+
+    let offset = rubberOffsetRef.current
+    let velocity = initialVelocity * 16.67
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime) / 16.67
+      lastTime = now
+
+      velocity += -offset * RUBBER_SPRING * dt
+      velocity *= Math.pow(RUBBER_DAMPING, dt)
+      offset += velocity * dt
+
+      rubberOffsetRef.current = offset
+
+      if (Math.abs(offset) < 0.25 && Math.abs(velocity) < 0.25) {
+        rubberOffsetRef.current = 0
+        content.style.transform = ''
+        rubberReturnRef.current = null
+        return
+      }
+
+      content.style.transform = `translateY(${offset}px)`
+      rubberReturnRef.current = requestAnimationFrame(step)
+    }
+
+    rubberReturnRef.current = requestAnimationFrame(step)
+  }, [cancelRubberReturn])
 
   const cancelMomentum = useCallback(() => {
     if (momentumRef.current !== null) {
@@ -164,16 +196,14 @@ export default function AlbumWaterfallPage({
 
       if (next < 0) {
         el.scrollTop = 0
-        setRubberOffset(24)
-        resetRubberOffset()
+        resetRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         momentumRef.current = null
         return
       }
 
       if (next > maxScroll) {
         el.scrollTop = maxScroll
-        setRubberOffset(-24)
-        resetRubberOffset()
+        resetRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         momentumRef.current = null
         return
       }
@@ -190,7 +220,7 @@ export default function AlbumWaterfallPage({
     }
 
     momentumRef.current = requestAnimationFrame(step)
-  }, [getMaxScroll, resetRubberOffset, setRubberOffset])
+  }, [getMaxScroll, resetRubberOffset])
 
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
@@ -204,6 +234,7 @@ export default function AlbumWaterfallPage({
     if (el.scrollHeight <= el.clientHeight) return
 
     cancelMomentum()
+    cancelRubberReturn()
     setRubberOffset(0)
 
     dragRef.current = {
@@ -217,7 +248,7 @@ export default function AlbumWaterfallPage({
     }
 
     el.setPointerCapture(e.pointerId)
-  }, [cancelMomentum, setRubberOffset])
+  }, [cancelMomentum, cancelRubberReturn, setRubberOffset])
 
   const handlePointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = dragRef.current
@@ -269,18 +300,30 @@ export default function AlbumWaterfallPage({
     dragRef.current.active = false
     dragRef.current.pointerId = -1
 
-    resetRubberOffset()
+    const maxScroll = el ? getMaxScroll(el) : 0
+    const atTop = !!el && el.scrollTop <= 0
+    const atBottom = !!el && el.scrollTop >= maxScroll
+    const flingOutward =
+      (atTop && releaseVelocity < 0) ||
+      (atBottom && releaseVelocity > 0)
 
-    if (Math.abs(releaseVelocity) > 0.08) {
-      startMomentum(releaseVelocity)
+    if (flingOutward) {
+      resetRubberOffset(-releaseVelocity * RELEASE_TO_RUBBER)
+    } else {
+      resetRubberOffset()
+
+      if (Math.abs(releaseVelocity) > 0.08) {
+        startMomentum(releaseVelocity)
+      }
     }
-  }, [resetRubberOffset, startMomentum])
+  }, [resetRubberOffset, startMomentum, getMaxScroll])
 
   useEffect(() => {
     return () => {
       cancelMomentum()
+      cancelRubberReturn()
     }
-  }, [cancelMomentum])
+  }, [cancelMomentum, cancelRubberReturn])
 
   return (
     <div className="absolute inset-0 overflow-hidden" style={{ background: '#EEEFF4' }}>
