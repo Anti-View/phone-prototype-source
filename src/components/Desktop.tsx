@@ -454,7 +454,7 @@ function Panel2({ onOpenCollection }: { onOpenCollection?: () => void }) {
     <ContentPanel>
       <LargeWidgetPressable
         onTap={onOpenCollection}
-        className="w-[350px] h-[350px] bg-white relative"
+        className="w-[350px] h-[350px] relative"
         style={{ borderRadius: 28 }}
       >
         <img src={publicAsset('img/洞洞板_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} style={{ borderRadius: 28 }} />
