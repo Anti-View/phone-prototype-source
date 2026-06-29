@@ -54,6 +54,12 @@ export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
     velocity: 0,
   })
 
+  const getStableRotation = (index: number) => {
+    const value = Math.sin(index * 999.37) * 10000
+    const fraction = value - Math.floor(value)
+    return Number((fraction * 10 - 5).toFixed(2))
+  }
+
   const cards = useMemo(() => {
     return Array.from({ length: 20 }, (_, index) => {
       const isLeft = index % 2 === 0
@@ -64,6 +70,7 @@ export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
         left: isLeft ? 32 : 226,
         top: (isLeft ? 138 : 84) + columnIndex * 230,
         color: pastelColors[index % pastelColors.length],
+        rotation: getStableRotation(index),
       }
     })
   }, [])
@@ -324,6 +331,8 @@ export default function AlbumWaterfallPage({ onBack }: { onBack: () => void }) {
               style={{
                 left: card.left,
                 top: card.top,
+                transform: `rotate(${card.rotation}deg)`,
+                transformOrigin: 'center center',
               }}
             />
           ))}
