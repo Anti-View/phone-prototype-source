@@ -36,14 +36,13 @@ function getFloatInMotion(kind: FloatInKind, delay: number) {
   }
 
   if (kind === 'image') {
-    const imageDelay = delay + 0.34
     return {
       initial: { opacity: 0, y: 34, filter: 'blur(5px)' },
       animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
       transition: {
-        y: { delay: imageDelay, type: 'spring' as const, stiffness: 92, damping: 23, mass: 1.28 },
-        opacity: { delay: imageDelay, duration: 0.95, ease: [0.22, 1, 0.36, 1] as const },
-        filter: { delay: imageDelay, duration: 0.95, ease: [0.22, 1, 0.36, 1] as const },
+        y: { delay, type: 'spring' as const, stiffness: 92, damping: 23, mass: 1.28 },
+        opacity: { delay, duration: 0.95, ease: [0.22, 1, 0.36, 1] as const },
+        filter: { delay, duration: 0.95, ease: [0.22, 1, 0.36, 1] as const },
       },
     }
   }
