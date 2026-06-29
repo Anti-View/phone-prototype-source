@@ -180,14 +180,19 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
         square.width = size
         square.height = size
         square.getContext('2d')!.drawImage(canvas, ox, oy, size, size, 0, 0, size, size)
-        // Overlay GIF sticker onto the square
+        // Overlay GIF sticker with rotation (matches CSS: rotate 15deg, scale 178/220)
         const gif = gifRef.current
         if (gif) {
           const gifW = (178 / 220) * size
           const gifH = gifW
-          const gifX = size - (80 / 220) * size - gifW
-          const gifY = (40 / 164) * size
-          square.getContext('2d')!.drawImage(gif, gifX, gifY, gifW, gifH)
+          const gifCX = size - (80 / 220) * size - gifW / 2
+          const gifCY = (40 / 164) * size + gifH / 2
+          const gCtx = square.getContext('2d')!
+          gCtx.save()
+          gCtx.translate(gifCX, gifCY)
+          gCtx.rotate((15 * Math.PI) / 180)
+          gCtx.drawImage(gif, -gifW / 2, -gifH / 2, gifW, gifH)
+          gCtx.restore()
         }
         onCapture(square.toDataURL('image/jpeg', 0.9))
       }
