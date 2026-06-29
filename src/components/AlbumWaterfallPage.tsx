@@ -113,16 +113,24 @@ function PolaroidCard({
       kind="card"
       className="absolute"
       style={{ left, top }}
-      layoutId={`polaroid-${id}`}
       data-polaroid-card-id={id}
     >
-      <div style={{ cursor: 'pointer' }}>
+      <motion.div
+        layoutId={`polaroid-${id}`}
+        transition={{
+          layout: POLAROID_PREVIEW_LAYOUT_SPRING,
+        }}
+        style={{
+          cursor: 'pointer',
+          willChange: 'transform',
+        }}
+      >
         <PolaroidVisual
           color={color}
           src={src}
           rotation={rotation}
         />
-      </div>
+      </motion.div>
     </FloatInItem>
   )
 }
