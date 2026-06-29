@@ -358,7 +358,7 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* Real layout frame: 812px keeps internal flex math unchanged */}
-          <div className="w-full h-[812px] flex flex-col">
+          <div className="w-full h-full flex flex-col">
         {/* ── Top handle + controls ── */}
         <div
           style={{
