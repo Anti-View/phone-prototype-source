@@ -390,8 +390,8 @@ function Panel2() {
 function Panel3() {
   return (
     <ContentPanel>
-      <div className="w-[350px] h-[350px] bg-white relative" style={{ borderRadius: 28 }}>
-        <img src={publicAsset('img/展柜_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} style={{ borderRadius: 28 }} />
+      <div className="w-[350px] h-[350px] relative">
+        <img src={publicAsset('img/展柜_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
       </div>
       <div className="absolute left-0 top-[382px]"><IconGrid labels={['应用17', '应用18', '应用19', '应用20']} /></div>
       <div className="absolute left-[191px] top-[382px]"><IconGrid labels={['应用21', '应用22', '应用23', '应用24']} /></div>
