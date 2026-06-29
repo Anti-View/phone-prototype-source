@@ -13,6 +13,7 @@ import Desktop from './components/Desktop'
 import { publicAsset } from './utils/assets'
 import { useAppState } from './hooks/useAppState'
 import DiaryDetailSheet from './components/DiaryDetailSheet'
+import AlbumWaterfallPage from './components/AlbumWaterfallPage'
 import type { DiaryEntry } from './types/diary'
 
 const diaryDetailFullText = `今天下了一整天雨，已经是第三天了。我坐在小屋的窗台上，看那个雨滴一滴滴往下滑，滑到屏幕边缘就不见了。说实话有点看腻了，但是我又懒得去换，就让它下着吧。
@@ -104,6 +105,7 @@ export default function App() {
     applyAndDismiss,
     goToDesktop,
     openDiary,
+    openAlbum,
   } = useAppState()
 
   const [toastVisible, setToastVisible] = useState(false)
@@ -337,7 +339,7 @@ export default function App() {
     }
   }, [cancelDiaryMomentum])
 
-  const pageActive = current !== 'desktop' && current !== 'diary'
+  const pageActive = current !== 'desktop' && current !== 'diary' && current !== 'album'
 
   return (
     <PhoneFrame>
@@ -347,7 +349,11 @@ export default function App() {
         animate={{ x: pageActive ? -80 : 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
       >
-        <Desktop onOpenApp={openTheme} onOpenDiary={openDiary} />
+        <Desktop
+          onOpenApp={openTheme}
+          onOpenDiary={openDiary}
+          onOpenAlbum={openAlbum}
+        />
       </motion.div>
 
       {/* ── Theme page — slides in from right ── */}
@@ -621,6 +627,22 @@ export default function App() {
                 />
               )}
             </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Album waterfall page — slides in from right ── */}
+      <AnimatePresence>
+        {current === 'album' && (
+          <motion.div
+            key="album-page"
+            className="absolute inset-0 z-20"
+            initial={{ x: 402 }}
+            animate={{ x: 0 }}
+            exit={{ x: 402 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
+          >
+            <AlbumWaterfallPage onBack={goToDesktop} />
           </motion.div>
         )}
       </AnimatePresence>
