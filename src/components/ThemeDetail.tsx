@@ -1,4 +1,4 @@
-import { useDragScroll } from '../hooks/useDragScroll'
+import { useCallback, useEffect, useRef, type PointerEvent } from 'react'
 import { publicAsset } from '../utils/assets'
 
 interface ThemeDetailProps {
@@ -6,7 +6,199 @@ interface ThemeDetailProps {
 }
 
 export default function ThemeDetail({ onApply }: ThemeDetailProps) {
-  const scrollRef = useDragScroll()
+  const previewScrollRef = useRef<HTMLDivElement | null>(null)
+  const previewContentRef = useRef<HTMLDivElement | null>(null)
+  const previewMomentumRef = useRef<number | null>(null)
+
+  const previewDragRef = useRef({
+    active: false,
+    pointerId: -1,
+    startX: 0,
+    startScrollLeft: 0,
+    lastX: 0,
+    lastTime: 0,
+    velocity: 0,
+  })
+
+  const getMaxPreviewScroll = useCallback((el: HTMLDivElement) => {
+    return Math.max(0, el.scrollWidth - el.clientWidth)
+  }, [])
+
+  const setPreviewRubberOffset = useCallback((offset: number) => {
+    const content = previewContentRef.current
+    if (!content) return
+    content.style.transform = `translateX(${offset}px)`
+  }, [])
+
+  const resetPreviewRubberOffset = useCallback(() => {
+    const content = previewContentRef.current
+    if (!content) return
+
+    const currentTransform = content.style.transform
+    if (!currentTransform || currentTransform === 'translateX(0px)') {
+      content.style.transform = ''
+      return
+    }
+
+    content.animate(
+      [
+        { transform: currentTransform },
+        { transform: 'translateX(0px)' },
+      ],
+      {
+        duration: 420,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      },
+    )
+
+    content.style.transform = ''
+  }, [])
+
+  const cancelPreviewMomentum = useCallback(() => {
+    if (previewMomentumRef.current !== null) {
+      cancelAnimationFrame(previewMomentumRef.current)
+      previewMomentumRef.current = null
+    }
+  }, [])
+
+  const startPreviewMomentum = useCallback((initialVelocity: number) => {
+    const el = previewScrollRef.current
+    if (!el) return
+
+    let velocity = initialVelocity
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime)
+      lastTime = now
+
+      const maxScroll = getMaxPreviewScroll(el)
+      const next = el.scrollLeft + velocity * dt
+
+      if (next < 0) {
+        el.scrollLeft = 0
+        setPreviewRubberOffset(24)
+        resetPreviewRubberOffset()
+        previewMomentumRef.current = null
+        return
+      }
+
+      if (next > maxScroll) {
+        el.scrollLeft = maxScroll
+        setPreviewRubberOffset(-24)
+        resetPreviewRubberOffset()
+        previewMomentumRef.current = null
+        return
+      }
+
+      el.scrollLeft = next
+      velocity *= Math.pow(0.95, dt / 16.67)
+
+      if (Math.abs(velocity) < 0.02) {
+        previewMomentumRef.current = null
+        return
+      }
+
+      previewMomentumRef.current = requestAnimationFrame(step)
+    }
+
+    previewMomentumRef.current = requestAnimationFrame(step)
+  }, [getMaxPreviewScroll, resetPreviewRubberOffset, setPreviewRubberOffset])
+
+  const handlePreviewPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return
+    if (e.button !== 0) return
+
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, [role="button"]')) return
+
+    const el = previewScrollRef.current
+    if (!el) return
+    if (el.scrollWidth <= el.clientWidth) return
+
+    cancelPreviewMomentum()
+    setPreviewRubberOffset(0)
+
+    previewDragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startScrollLeft: el.scrollLeft,
+      lastX: e.clientX,
+      lastTime: performance.now(),
+      velocity: 0,
+    }
+
+    el.setPointerCapture(e.pointerId)
+    el.style.cursor = 'grabbing'
+  }, [cancelPreviewMomentum, setPreviewRubberOffset])
+
+  const handlePreviewPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const state = previewDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = previewScrollRef.current
+    if (!el) return
+
+    const now = performance.now()
+    const dt = Math.max(1, now - state.lastTime)
+    const dx = e.clientX - state.lastX
+
+    const instantVelocity = -dx / dt
+    state.velocity = state.velocity * 0.7 + instantVelocity * 0.3
+    state.lastX = e.clientX
+    state.lastTime = now
+
+    const totalDeltaX = e.clientX - state.startX
+    const rawScrollLeft = state.startScrollLeft - totalDeltaX
+    const maxScroll = getMaxPreviewScroll(el)
+
+    if (rawScrollLeft < 0) {
+      el.scrollLeft = 0
+      setPreviewRubberOffset(-rawScrollLeft * 0.35)
+    } else if (rawScrollLeft > maxScroll) {
+      el.scrollLeft = maxScroll
+      setPreviewRubberOffset(-(rawScrollLeft - maxScroll) * 0.35)
+    } else {
+      el.scrollLeft = rawScrollLeft
+      setPreviewRubberOffset(0)
+    }
+
+    e.preventDefault()
+  }, [getMaxPreviewScroll, setPreviewRubberOffset])
+
+  const stopPreviewDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const state = previewDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = previewScrollRef.current
+    if (el?.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
+    }
+
+    const releaseVelocity = state.velocity
+
+    previewDragRef.current.active = false
+    previewDragRef.current.pointerId = -1
+
+    if (el) {
+      el.style.cursor = ''
+    }
+
+    resetPreviewRubberOffset()
+
+    if (Math.abs(releaseVelocity) > 0.08) {
+      startPreviewMomentum(releaseVelocity)
+    }
+  }, [resetPreviewRubberOffset, startPreviewMomentum])
+
+  useEffect(() => {
+    return () => {
+      cancelPreviewMomentum()
+    }
+  }, [cancelPreviewMomentum])
 
   return (
     <div className="absolute inset-0 z-0 select-none">
@@ -30,13 +222,25 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
         ))}
       </div>
 
-      {/* Preview Cards — mouse-drag to scroll, no scrollbar */}
+      {/* Preview Cards — pointer drag + momentum + rubber band */}
       <div
-        ref={scrollRef}
-        className="absolute top-[258px] left-0 w-full overflow-x-auto"
-        style={{ paddingLeft: 16, paddingRight: 16 }}
+        ref={previewScrollRef}
+        className="absolute top-[258px] left-0 w-full overflow-x-auto overscroll-contain [&::-webkit-scrollbar]:hidden"
+        style={{
+          paddingLeft: 16,
+          paddingRight: 16,
+          cursor: 'grab',
+          touchAction: 'pan-x',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+        }}
+        onPointerDown={handlePreviewPointerDown}
+        onPointerMove={handlePreviewPointerMove}
+        onPointerUp={stopPreviewDrag}
+        onPointerCancel={stopPreviewDrag}
       >
-        <div className="flex gap-[16px] w-max">
+        <div ref={previewContentRef} className="flex gap-[16px] w-max">
           <img src={publicAsset('img/主题详情页1.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
           <img src={publicAsset('img/主题详情页2.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
           <img src={publicAsset('img/主题详情页3.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
