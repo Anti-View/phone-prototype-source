@@ -259,13 +259,15 @@ export default function DiaryDetailSheet({
           }}
         />
 
-        {/* Content viewport: 812px, keeps internal layout unchanged */}
+        {/* Overshoot-safe visual shell: 932px to avoid clipping during spring */}
         <div
-          className="relative z-10 w-full h-[932px] rounded-t-[38px] flex flex-col overflow-hidden"
+          className="relative z-10 w-full h-[932px] rounded-t-[38px] overflow-hidden"
           style={{
             fontFamily: 'var(--font-ui)',
           }}
         >
+          {/* Real layout frame: 812px keeps internal flex math unchanged */}
+          <div className="w-full h-[812px] flex flex-col">
         {/* ── Top handle + controls ── */}
         <div
           style={{
@@ -536,6 +538,7 @@ export default function DiaryDetailSheet({
               />
             </div>
           </div>
+        </div>
         </div>
         </div>
       </motion.div>
