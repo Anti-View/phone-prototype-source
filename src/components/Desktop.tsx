@@ -591,13 +591,10 @@ export default function Desktop({
   }, [wallSpring])
 
   const handleRootPointerDownCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (isLocked) return
     characterTapRef.current = { x: e.clientX, y: e.clientY }
-  }, [isLocked])
+  }, [])
 
   const handleRootPointerUpCapture = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (isLocked) return
-
     const dx = e.clientX - characterTapRef.current.x
     const dy = e.clientY - characterTapRef.current.y
 
@@ -608,7 +605,7 @@ export default function Desktop({
     if (target.closest('button, a, input, textarea, select, [role="button"]')) return
 
     playAnim('点击')
-  }, [isLocked, isPointInCharacter])
+  }, [isPointInCharacter])
 
   /* ── Return to lock screen (dock first icon) ── */
   const lockScreen = () => {
