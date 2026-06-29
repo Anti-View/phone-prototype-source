@@ -445,50 +445,100 @@ export default function Desktop({
     '写日记': 6369,   // 193f × 33ms (30fps) — read from file
   }
   const DEFAULT_ANIM = '待机'
+  const MIN_HOLD_MS = 240
+
   const [charAnim, setCharAnim] = useState(DEFAULT_ANIM)
-  const [charCycle, setCharCycle] = useState(() => Date.now())
-  const charTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const currentAnimRef = useRef(DEFAULT_ANIM)
+  const currentStartedAtRef = useRef(Date.now())
+  const pendingAnimRef = useRef<string | null>(null)
+  const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const returnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Play `name` once, then return to default (待机).
-  // Waits for current loop to finish before switching.
-  const playAnim = (name: string) => {
-    // clear pending
-    if (charTimerRef.current) clearTimeout(charTimerRef.current)
-
-    const step1 = () => {
-      setCharAnim(name)
-      setCharCycle(Date.now())
-      // after one loop of target, return to default
-      const targetDur = ANIM[name] || ANIM[DEFAULT_ANIM]
-      charTimerRef.current = setTimeout(() => {
-        setCharAnim(DEFAULT_ANIM)
-        setCharCycle(Date.now())
-        charTimerRef.current = null
-      }, targetDur)
-    }
-
-    if (charAnim === name) {
-      // already playing target — re-extend: wait for current cycle then go back
-      const elapsed = (Date.now() - charCycle) % (ANIM[name] || ANIM[DEFAULT_ANIM])
-      const remaining = (ANIM[name] || ANIM[DEFAULT_ANIM]) - elapsed
-      charTimerRef.current = setTimeout(step1, remaining)
-    } else {
-      // playing something else — finish current loop, then play target once
-      const curDur = ANIM[charAnim] || ANIM[DEFAULT_ANIM]
-      const elapsed = (Date.now() - charCycle) % curDur
-      const remaining = curDur - elapsed
-      charTimerRef.current = setTimeout(step1, remaining)
+  const clearSwitchTimer = () => {
+    if (switchTimerRef.current) {
+      clearTimeout(switchTimerRef.current)
+      switchTimerRef.current = null
     }
   }
 
-  // cleanup timer on unmount
-  useEffect(() => () => { if (charTimerRef.current) clearTimeout(charTimerRef.current) }, [])
+  const clearReturnTimer = () => {
+    if (returnTimerRef.current) {
+      clearTimeout(returnTimerRef.current)
+      returnTimerRef.current = null
+    }
+  }
+
+  const transitionTo = useCallback((name: string) => {
+    clearSwitchTimer()
+    clearReturnTimer()
+
+    pendingAnimRef.current = null
+    currentAnimRef.current = name
+    currentStartedAtRef.current = Date.now()
+    setCharAnim(name)
+
+    const targetDur = ANIM[name] || ANIM[DEFAULT_ANIM]
+
+    returnTimerRef.current = setTimeout(() => {
+      returnTimerRef.current = null
+
+      const pending = pendingAnimRef.current
+      if (pending && pending !== currentAnimRef.current) {
+        transitionTo(pending)
+        return
+      }
+
+      if (currentAnimRef.current !== DEFAULT_ANIM) {
+        transitionTo(DEFAULT_ANIM)
+      }
+    }, targetDur)
+  }, [])
+
+  const playAnim = useCallback((name: string) => {
+    if (!ANIM[name]) return
+
+    pendingAnimRef.current = name
+    clearSwitchTimer()
+
+    const elapsed = Date.now() - currentStartedAtRef.current
+    const wait = Math.max(0, MIN_HOLD_MS - elapsed)
+
+    switchTimerRef.current = setTimeout(() => {
+      switchTimerRef.current = null
+
+      const pending = pendingAnimRef.current
+      if (!pending) return
+
+      if (pending === currentAnimRef.current) {
+        pendingAnimRef.current = null
+        return
+      }
+
+      transitionTo(pending)
+    }, wait)
+  }, [transitionTo])
+
+  // cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      clearSwitchTimer()
+      clearReturnTimer()
+    }
+  }, [])
+
+  // preload all animation WebP files
+  useEffect(() => {
+    Object.keys(ANIM).forEach(name => {
+      const img = new Image()
+      img.src = publicAsset(`videos/${name}.webp`)
+    })
+  }, [])
 
   // respond to external character animation requests (e.g. from diary back-to-desktop)
   useEffect(() => {
     if (!characterAnimRequest) return
     playAnim(characterAnimRequest.name)
-  }, [characterAnimRequest?.id])
+  }, [characterAnimRequest?.id, playAnim])
 
   /* ── Motion values ── */
   const unlockY = useMotionValue(0)
