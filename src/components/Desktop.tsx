@@ -135,6 +135,7 @@ function GlassIcon({ char }: { char: string }) {
 /* ── Camera island — live feed, capture, flash animation ── */
 function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const gifRef = useRef<HTMLImageElement>(null)
   const [fallback, setFallback] = useState(false)
   const [flash, setFlash] = useState(false)
 
@@ -179,6 +180,15 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
         square.width = size
         square.height = size
         square.getContext('2d')!.drawImage(canvas, ox, oy, size, size, 0, 0, size, size)
+        // Overlay GIF sticker onto the square
+        const gif = gifRef.current
+        if (gif) {
+          const gifW = (178 / 220) * size
+          const gifH = gifW
+          const gifX = size - (80 / 220) * size - gifW
+          const gifY = (40 / 164) * size
+          square.getContext('2d')!.drawImage(gif, gifX, gifY, gifW, gifH)
+        }
         onCapture(square.toDataURL('image/jpeg', 0.9))
       }
     }
@@ -208,6 +218,7 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
         )}
         {/* Pet sticker — appears after viewfinder animation ends */}
         <motion.img
+          ref={gifRef}
           src={publicAsset('videos/待机.gif')}
           alt=""
           className="absolute"
