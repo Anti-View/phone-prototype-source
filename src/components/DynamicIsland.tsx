@@ -23,14 +23,14 @@ const ISLAND_COLLAPSE_SPRING = {
 }
 
 const ISLAND_EXPAND_BLUR_TRANSITION = {
-  duration: 0.28,
-  times: [0, 0.45, 1],
+  duration: 0.34,
+  times: [0, 0.32, 1],
   ease: [0.22, 1, 0.36, 1] as const,
 }
 
 const ISLAND_COLLAPSE_BLUR_TRANSITION = {
-  duration: 0.2,
-  times: [0, 0.45, 1],
+  duration: 0.26,
+  times: [0, 0.35, 1],
   ease: [0.22, 1, 0.36, 1] as const,
 }
 
@@ -76,8 +76,8 @@ export default function DynamicIsland({ expanded, variant = 'square', onClose, c
           height: expanded ? v.h : 30,
           borderRadius: expanded ? v.radius : 30,
           filter: expanded
-            ? ['blur(0px)', 'blur(3px)', 'blur(0px)']
-            : ['blur(0px)', 'blur(2px)', 'blur(0px)'],
+            ? ['blur(0px)', 'blur(6px)', 'blur(0px)']
+            : ['blur(0px)', 'blur(4px)', 'blur(0px)'],
         }}
         transition={{
           left: expanded ? ISLAND_EXPAND_SPRING : ISLAND_COLLAPSE_SPRING,
