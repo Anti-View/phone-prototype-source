@@ -60,6 +60,7 @@ export default function DiaryDetailSheet({
   const detailMomentumRef = useRef<number | null>(null)
   const detailRubberOffsetRef = useRef(0)
   const detailRubberReturnRef = useRef<number | null>(null)
+  const layoutFrameRef = useRef<HTMLDivElement | null>(null)
   const [showTopFade, setShowTopFade] = useState(false)
 
   const RUBBER_SPRING = 0.18
@@ -335,9 +336,25 @@ export default function DiaryDetailSheet({
         exit={{ y: 932 }}
         transition={{
           type: 'spring',
-          damping: 46,
+          damping: 28,
           stiffness: 280,
           mass: 1.1,
+        }}
+        onUpdate={(latest: any) => {
+          const rawY = latest.y as number
+          const y = typeof rawY === 'number' ? rawY : Number.parseFloat(String(rawY ?? 0))
+          const layout = layoutFrameRef.current
+          if (!layout) return
+          const compensate = Number.isFinite(y) && y < 0 ? -y : 0
+          if (compensate > 0.1) {
+            layout.style.transform = `translateY(${compensate}px)`
+          } else {
+            layout.style.transform = ''
+          }
+        }}
+        onAnimationComplete={() => {
+          const layout = layoutFrameRef.current
+          if (layout) layout.style.transform = ''
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -358,7 +375,7 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* Real layout frame: 812px keeps internal flex math unchanged */}
-          <div className="w-full h-[812px] flex flex-col">
+          <div ref={layoutFrameRef} className="w-full h-[812px] flex flex-col">
         {/* ── Top handle + controls ── */}
         <div
           style={{
