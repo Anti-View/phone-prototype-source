@@ -335,7 +335,7 @@ export default function DiaryDetailSheet({
         exit={{ y: 932 }}
         transition={{
           type: 'spring',
-          damping: 28,
+          damping: 46,
           stiffness: 280,
           mass: 1.1,
         }}
@@ -358,7 +358,7 @@ export default function DiaryDetailSheet({
           }}
         >
           {/* Real layout frame: 812px keeps internal flex math unchanged */}
-          <div className="w-full h-full flex flex-col">
+          <div className="w-full h-[812px] flex flex-col">
         {/* ── Top handle + controls ── */}
         <div
           style={{
