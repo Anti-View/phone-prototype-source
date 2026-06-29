@@ -68,6 +68,48 @@ export default function DiaryDetailSheet({
   const RELEASE_TO_RUBBER = 0.35
   const DETAIL_BOTTOM_SAFE = 40
 
+  const REVEAL_BASE_DELAY = 0.16
+  const REVEAL_STEP = 0.13
+
+  const revealItemVariants = {
+    hidden: { opacity: 0, y: 22 },
+    show: (index = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: REVEAL_BASE_DELAY + index * REVEAL_STEP,
+        y: { type: 'spring', stiffness: 180, damping: 24, mass: 0.9 },
+        opacity: { duration: 0.48, ease: [0.22, 1, 0.36, 1] },
+      },
+    }),
+  }
+
+  const revealTextVariants = {
+    hidden: { opacity: 0, y: 22 },
+    show: (index = 0) => ({
+      opacity: 0.65,
+      y: 0,
+      transition: {
+        delay: REVEAL_BASE_DELAY + index * REVEAL_STEP,
+        y: { type: 'spring', stiffness: 180, damping: 24, mass: 0.9 },
+        opacity: { duration: 0.52, ease: [0.22, 1, 0.36, 1] },
+      },
+    }),
+  }
+
+  const revealImageVariants = {
+    hidden: { opacity: 0, y: 26 },
+    show: (index = 0) => ({
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: REVEAL_BASE_DELAY + index * REVEAL_STEP + 0.14,
+        y: { type: 'spring', stiffness: 160, damping: 25, mass: 1 },
+        opacity: { duration: 0.58, ease: [0.22, 1, 0.36, 1] },
+      },
+    }),
+  }
+
   const updateTopFade = useCallback(() => {
     const el = detailScrollRef.current
     if (!el) {
@@ -361,9 +403,10 @@ export default function DiaryDetailSheet({
           <div className="w-full h-[812px] flex flex-col">
         {/* ── Top handle + controls ── */}
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+          variants={revealItemVariants}
+          initial="hidden"
+          animate="show"
+          custom={0}
           style={{
             paddingBottom: 10,
             display: 'flex',
@@ -467,9 +510,10 @@ export default function DiaryDetailSheet({
         >
           {/* ── Header: date + time + pills + tags (fixed) ── */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.16, duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            variants={revealItemVariants}
+            initial="hidden"
+            animate="show"
+            custom={1}
             style={{
               alignSelf: 'stretch',
               display: 'flex',
@@ -548,9 +592,10 @@ export default function DiaryDetailSheet({
           <motion.img
             src={publicAsset('img/player.png')}
             alt=""
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.24, duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+            variants={revealItemVariants}
+            initial="hidden"
+            animate="show"
+            custom={2}
             style={{
               width: 354,
               height: 56,
@@ -617,9 +662,10 @@ export default function DiaryDetailSheet({
               >
                 {/* Full text */}
                 <motion.div
-                  initial={{ opacity: 0, y: 18 }}
-                  animate={{ opacity: 0.65, y: 0 }}
-                  transition={{ delay: 0.34, duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                  variants={revealTextVariants}
+                  initial="hidden"
+                  animate="show"
+                  custom={3}
                   style={{
                     alignSelf: 'stretch',
                     color: 'rgba(0, 0, 0, 0.90)',
@@ -636,9 +682,10 @@ export default function DiaryDetailSheet({
                 <motion.img
                   src={publicAsset('img/content_image.png')}
                   alt=""
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.52, duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                  variants={revealImageVariants}
+                  initial="hidden"
+                  animate="show"
+                  custom={4}
                   style={{
                     alignSelf: 'stretch',
                     height: 200,
