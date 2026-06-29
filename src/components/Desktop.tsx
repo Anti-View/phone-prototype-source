@@ -477,6 +477,21 @@ export default function Desktop({
   }
   const DEFAULT_ANIM = '待机'
 
+  /* ── Music fx (note particles) ── */
+  const MUSIC_FX_HOST_ANIM = '听音乐'
+  const MUSIC_FX_SRC = publicAsset('videos/music1.gif')
+  const MUSIC_FX_TOP = 64
+  const MUSIC_FX_RIGHT = 16
+  const MUSIC_FX_SIZE = 120
+  const MUSIC_FX_LOOP_MS = 14450
+  const MUSIC_FX_MAX_MS = ANIM[MUSIC_FX_HOST_ANIM].duration
+  const MUSIC_FX_LOOP_COUNT = Math.floor(MUSIC_FX_MAX_MS / MUSIC_FX_LOOP_MS)
+  const MUSIC_FX_VISIBLE_MS =
+    MUSIC_FX_LOOP_COUNT > 0
+      ? MUSIC_FX_LOOP_COUNT * MUSIC_FX_LOOP_MS
+      : MUSIC_FX_MAX_MS
+  const MUSIC_FX_FADE_MS = 120
+
   const EDGE_SAFE_ANIMS = new Set(['待机', '吹气', '点击', '听音乐'])
   const END_ONLY_SAFE_ANIMS = new Set(['写日记'])
 
@@ -491,6 +506,13 @@ export default function Desktop({
   const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const returnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const crossfadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [musicFxMounted, setMusicFxMounted] = useState(false)
+  const [musicFxVisible, setMusicFxVisible] = useState(false)
+  const [musicFxKey, setMusicFxKey] = useState(0)
+  const musicFxEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const musicFxUnmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wasMusicAnimRef = useRef(false)
 
   const clearSwitchTimer = () => {
     if (switchTimerRef.current) {
@@ -608,21 +630,85 @@ export default function Desktop({
     }, wait)
   }, [transitionTo])
 
+  /* ── Music fx helpers ── */
+  const clearMusicFxTimers = () => {
+    if (musicFxEndTimerRef.current) {
+      clearTimeout(musicFxEndTimerRef.current)
+      musicFxEndTimerRef.current = null
+    }
+    if (musicFxUnmountTimerRef.current) {
+      clearTimeout(musicFxUnmountTimerRef.current)
+      musicFxUnmountTimerRef.current = null
+    }
+  }
+
+  const startMusicFx = () => {
+    clearMusicFxTimers()
+
+    setMusicFxKey(prev => prev + 1)
+    setMusicFxMounted(true)
+    setMusicFxVisible(false)
+
+    requestAnimationFrame(() => {
+      setMusicFxVisible(true)
+    })
+
+    const endDelay = Math.max(0, MUSIC_FX_VISIBLE_MS - MUSIC_FX_FADE_MS)
+
+    musicFxEndTimerRef.current = setTimeout(() => {
+      setMusicFxVisible(false)
+      musicFxEndTimerRef.current = null
+
+      musicFxUnmountTimerRef.current = setTimeout(() => {
+        setMusicFxMounted(false)
+        musicFxUnmountTimerRef.current = null
+      }, MUSIC_FX_FADE_MS)
+    }, endDelay)
+  }
+
+  const stopMusicFx = () => {
+    clearMusicFxTimers()
+
+    setMusicFxVisible(false)
+
+    musicFxUnmountTimerRef.current = setTimeout(() => {
+      setMusicFxMounted(false)
+      musicFxUnmountTimerRef.current = null
+    }, MUSIC_FX_FADE_MS)
+  }
+
+  useEffect(() => {
+    const isMusicAnim = charAnim === MUSIC_FX_HOST_ANIM
+
+    if (isMusicAnim && !wasMusicAnimRef.current) {
+      startMusicFx()
+    }
+
+    if (!isMusicAnim && wasMusicAnimRef.current) {
+      stopMusicFx()
+    }
+
+    wasMusicAnimRef.current = isMusicAnim
+  }, [charAnim])
+
   // cleanup timers on unmount
   useEffect(() => {
     return () => {
       clearSwitchTimer()
       clearReturnTimer()
       clearCrossfadeTimer()
+      clearMusicFxTimers()
     }
   }, [])
 
-  // preload all animation WebP files
+  // preload all animation WebP files + music fx GIF
   useEffect(() => {
     Object.keys(ANIM).forEach(name => {
       const img = new Image()
       img.src = publicAsset(`videos/${name}.webp`)
     })
+    const musicFx = new Image()
+    musicFx.src = MUSIC_FX_SRC
   }, [])
 
   // respond to external character animation requests (e.g. from diary back-to-desktop)
@@ -842,6 +928,27 @@ export default function Desktop({
             />
           )}
         </div>
+
+        {/* Music note particles — fades in/out with 听音乐 */}
+        {musicFxMounted && (
+          <motion.img
+            key={`music-fx-${musicFxKey}`}
+            src={MUSIC_FX_SRC}
+            alt=""
+            className="absolute pointer-events-none select-none"
+            draggable={false}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: musicFxVisible ? 1 : 0 }}
+            transition={{ duration: MUSIC_FX_FADE_MS / 1000, ease: 'easeOut' }}
+            style={{
+              top: MUSIC_FX_TOP,
+              right: MUSIC_FX_RIGHT,
+              width: MUSIC_FX_SIZE,
+              height: MUSIC_FX_SIZE,
+              zIndex: 3,
+            }}
+          />
+        )}
       </motion.div>
 
       {/* ── Unlock Div: lock icon + time + bottom glass icons (370×731, bottom=48) ── */}
