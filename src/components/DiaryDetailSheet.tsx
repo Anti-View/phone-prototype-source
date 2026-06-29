@@ -56,8 +56,17 @@ export default function DiaryDetailSheet({
   onClose: () => void
 }) {
   const detailScrollRef = useRef<HTMLDivElement | null>(null)
+  const detailContentRef = useRef<HTMLDivElement | null>(null)
   const detailMomentumRef = useRef<number | null>(null)
+  const detailRubberOffsetRef = useRef(0)
+  const detailRubberReturnRef = useRef<number | null>(null)
   const [showTopFade, setShowTopFade] = useState(false)
+
+  const RUBBER_SPRING = 0.18
+  const RUBBER_DAMPING = 0.72
+  const MOMENTUM_TO_RUBBER = 0.42
+  const RELEASE_TO_RUBBER = 0.35
+  const DETAIL_BOTTOM_SAFE = 96
 
   const updateTopFade = useCallback(() => {
     const el = detailScrollRef.current
@@ -89,6 +98,58 @@ export default function DiaryDetailSheet({
     }
   }, [])
 
+  const cancelDetailRubberReturn = useCallback(() => {
+    if (detailRubberReturnRef.current !== null) {
+      cancelAnimationFrame(detailRubberReturnRef.current)
+      detailRubberReturnRef.current = null
+    }
+  }, [])
+
+  const setDetailRubberOffset = useCallback((offset: number) => {
+    const content = detailContentRef.current
+    detailRubberOffsetRef.current = offset
+    if (!content) return
+    if (Math.abs(offset) < 0.1) {
+      content.style.transform = ''
+      return
+    }
+    content.style.transform = `translateY(${offset}px)`
+  }, [])
+
+  const resetDetailRubberOffset = useCallback((initialVelocity = 0) => {
+    const content = detailContentRef.current
+    if (!content) return
+
+    cancelDetailRubberReturn()
+
+    let offset = detailRubberOffsetRef.current
+    let velocity = initialVelocity * 16.67
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime) / 16.67
+      lastTime = now
+
+      velocity += -offset * RUBBER_SPRING * dt
+      velocity *= Math.pow(RUBBER_DAMPING, dt)
+      offset += velocity * dt
+
+      detailRubberOffsetRef.current = offset
+
+      if (Math.abs(offset) < 0.25 && Math.abs(velocity) < 0.25) {
+        detailRubberOffsetRef.current = 0
+        content.style.transform = ''
+        detailRubberReturnRef.current = null
+        return
+      }
+
+      content.style.transform = `translateY(${offset}px)`
+      detailRubberReturnRef.current = requestAnimationFrame(step)
+    }
+
+    detailRubberReturnRef.current = requestAnimationFrame(step)
+  }, [cancelDetailRubberReturn])
+
   const startDetailMomentum = useCallback((initialVelocity: number) => {
     const el = detailScrollRef.current
     if (!el) return
@@ -106,6 +167,7 @@ export default function DiaryDetailSheet({
       if (next < 0) {
         el.scrollTop = 0
         updateTopFade()
+        resetDetailRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         detailMomentumRef.current = null
         return
       }
@@ -113,6 +175,7 @@ export default function DiaryDetailSheet({
       if (next > maxScroll) {
         el.scrollTop = maxScroll
         updateTopFade()
+        resetDetailRubberOffset(-velocity * MOMENTUM_TO_RUBBER)
         detailMomentumRef.current = null
         return
       }
@@ -130,7 +193,7 @@ export default function DiaryDetailSheet({
     }
 
     detailMomentumRef.current = requestAnimationFrame(step)
-  }, [getDetailMaxScroll, updateTopFade])
+  }, [getDetailMaxScroll, updateTopFade, resetDetailRubberOffset])
 
   const handleDetailPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
@@ -144,6 +207,8 @@ export default function DiaryDetailSheet({
     if (el.scrollHeight <= el.clientHeight) return
 
     cancelDetailMomentum()
+    cancelDetailRubberReturn()
+    setDetailRubberOffset(0)
 
     detailDragRef.current = {
       active: true,
@@ -157,7 +222,7 @@ export default function DiaryDetailSheet({
 
     el.style.cursor = 'grabbing'
     el.setPointerCapture(e.pointerId)
-  }, [cancelDetailMomentum])
+  }, [cancelDetailMomentum, cancelDetailRubberReturn, setDetailRubberOffset])
 
   const handleDetailPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = detailDragRef.current
@@ -180,11 +245,21 @@ export default function DiaryDetailSheet({
     const rawScrollTop = state.startScrollTop - totalDeltaY
     const maxScroll = getDetailMaxScroll(el)
 
-    el.scrollTop = Math.max(0, Math.min(maxScroll, rawScrollTop))
+    if (rawScrollTop < 0) {
+      el.scrollTop = 0
+      setDetailRubberOffset(-rawScrollTop * 0.35)
+    } else if (rawScrollTop > maxScroll) {
+      el.scrollTop = maxScroll
+      setDetailRubberOffset(-(rawScrollTop - maxScroll) * 0.35)
+    } else {
+      el.scrollTop = rawScrollTop
+      setDetailRubberOffset(0)
+    }
+
     updateTopFade()
 
     e.preventDefault()
-  }, [getDetailMaxScroll, updateTopFade])
+  }, [getDetailMaxScroll, updateTopFade, setDetailRubberOffset])
 
   const stopDetailDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
     const state = detailDragRef.current
@@ -204,25 +279,41 @@ export default function DiaryDetailSheet({
     detailDragRef.current.pointerId = -1
 
     const releaseVelocity = state.velocity
+    const maxScroll = el ? getDetailMaxScroll(el) : 0
+    const atTop = !!el && el.scrollTop <= 0
+    const atBottom = !!el && el.scrollTop >= maxScroll
+    const flingOutward =
+      (atTop && releaseVelocity < 0) ||
+      (atBottom && releaseVelocity > 0)
 
-    if (Math.abs(releaseVelocity) > 0.08) {
-      startDetailMomentum(releaseVelocity)
+    if (flingOutward) {
+      resetDetailRubberOffset(-releaseVelocity * RELEASE_TO_RUBBER)
+    } else {
+      resetDetailRubberOffset()
+
+      if (Math.abs(releaseVelocity) > 0.08) {
+        startDetailMomentum(releaseVelocity)
+      }
     }
-  }, [startDetailMomentum])
+  }, [getDetailMaxScroll, resetDetailRubberOffset, startDetailMomentum])
 
   useEffect(() => {
     return () => {
       cancelDetailMomentum()
+      cancelDetailRubberReturn()
     }
-  }, [cancelDetailMomentum])
+  }, [cancelDetailMomentum, cancelDetailRubberReturn])
 
   useEffect(() => {
     const el = detailScrollRef.current
     if (el) {
       el.scrollTop = 0
     }
+    cancelDetailMomentum()
+    cancelDetailRubberReturn()
+    setDetailRubberOffset(0)
     setShowTopFade(false)
-  }, [entry.id])
+  }, [entry.id, cancelDetailMomentum, cancelDetailRubberReturn, setDetailRubberOffset])
 
   return (
     <>
@@ -492,10 +583,8 @@ export default function DiaryDetailSheet({
               className="overflow-y-auto overscroll-contain"
               style={{
                 height: '100%',
-                paddingBottom: 64,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 24,
+                overflowY: 'auto',
+                overflowX: 'hidden',
                 touchAction: 'pan-y',
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
@@ -508,34 +597,54 @@ export default function DiaryDetailSheet({
               onPointerCancel={stopDetailDrag}
               onLostPointerCapture={stopDetailDrag}
             >
-              {/* Full text */}
               <div
+                ref={detailContentRef}
                 style={{
-                  alignSelf: 'stretch',
-                  color: 'rgba(0, 0, 0, 0.90)',
-                  opacity: 0.65,
-                  fontSize: 16,
-                  fontFamily: 'PingFang SC, sans-serif',
-                  fontWeight: 400,
-                  lineHeight: '24px',
-                  whiteSpace: 'pre-wrap',
-                  flexShrink: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 24,
+                  paddingBottom: DETAIL_BOTTOM_SAFE,
+                  willChange: 'transform',
                 }}
-              >{entry.fullText.trim()}</div>
+              >
+                {/* Full text */}
+                <div
+                  style={{
+                    alignSelf: 'stretch',
+                    color: 'rgba(0, 0, 0, 0.90)',
+                    opacity: 0.65,
+                    fontSize: 16,
+                    fontFamily: 'PingFang SC, sans-serif',
+                    fontWeight: 400,
+                    lineHeight: '24px',
+                    whiteSpace: 'pre-wrap',
+                    flexShrink: 0,
+                  }}
+                >{entry.fullText.trim()}</div>
 
-              {/* Content image */}
-              <img
-                src={publicAsset('img/content_image.png')}
-                alt=""
-                style={{
-                  alignSelf: 'stretch',
-                  height: 200,
-                  borderRadius: 32,
-                  objectFit: 'cover',
-                  flexShrink: 0,
-                }}
-                draggable={false}
-              />
+                {/* Content image */}
+                <img
+                  src={publicAsset('img/content_image.png')}
+                  alt=""
+                  style={{
+                    alignSelf: 'stretch',
+                    height: 200,
+                    borderRadius: 32,
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                    display: 'block',
+                  }}
+                  draggable={false}
+                />
+
+                <div
+                  aria-hidden="true"
+                  style={{
+                    height: DETAIL_BOTTOM_SAFE,
+                    flexShrink: 0,
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
