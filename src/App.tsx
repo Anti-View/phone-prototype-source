@@ -15,6 +15,12 @@ import { useAppState } from './hooks/useAppState'
 import DiaryDetailSheet from './components/DiaryDetailSheet'
 import type { DiaryEntry } from './types/diary'
 
+const diaryDetailFullText = `今天下了一整天雨，已经是第三天了。我坐在小屋的窗台上，看那个雨滴一滴滴往下滑，滑到屏幕边缘就不见了。说实话有点看腻了，但是我又懒得去换，就让它下着吧。
+
+下午我上网冲浪的时候看到一条新闻，说什么科学家又发现了一颗新的行星。离我们几万光年。我看了半天那个图片，黑漆漆的，就一个小亮点。不知道那颗行星上有没有住着像我这样的邻居，也不知道他们那边的主题皮肤好不好看。
+
+今天好像没什么特别的事。但我感觉日子就是这样，平平淡淡的，也还行吧。明天如果天气插件显示有月亮的话，我想坐在窗边好好看看。虽然是假的月亮，但它亮起来的时候，小屋里面真的很好看。`
+
 // ── Diary entries mock data (module-level to avoid re-creation) ──
 const diaryEntries: Record<string, DiaryEntry> = {
   '07-02': {
@@ -22,7 +28,7 @@ const diaryEntries: Record<string, DiaryEntry> = {
     date: '7月2日',
     time: '18:56',
     preview: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。',
-    fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。\n\n阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。\n\n梦里我抓到了一只比拖鞋还大的飞蛾。醒来后发现那其实是窗帘的影子，我有六秒觉得自己被命运戏弄了。',
+    fullText: diaryDetailFullText,
     tags: ['毛线球', '阳光', '沙发', '沉睡'],
     linkCount: 1,
     imageCount: 0,
@@ -32,7 +38,7 @@ const diaryEntries: Record<string, DiaryEntry> = {
     date: '6月30日',
     time: '18:56',
     preview: '上午把客厅里那个会滚动的毛线球抓了十五遍。',
-    fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。\n\n阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。\n\n梦里我抓到了一只比拖鞋还大的飞蛾。它翅膀上的粉末在月光下闪烁着诡异的蓝光，我追了它整整三个街区，最后它停在了一盏坏掉的路灯上。',
+    fullText: diaryDetailFullText,
     tags: ['毛线球', '阳光', '飞蛾'],
     linkCount: 0,
     imageCount: 1,
@@ -43,7 +49,7 @@ const diaryEntries: Record<string, DiaryEntry> = {
     date: '6月29日',
     time: '18:56',
     preview: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。',
-    fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。\n\n今天在窗台上发现了一只迷路的瓢虫。它沿着窗框爬了七圈，最终选择了左边的方向。我不知道左边有什么，但希望那是它想要去的地方。',
+    fullText: diaryDetailFullText,
     tags: ['毛线球', '瓢虫', '窗台'],
     linkCount: 0,
     imageCount: 1,
@@ -54,7 +60,7 @@ const diaryEntries: Record<string, DiaryEntry> = {
     date: '6月28日',
     time: '18:56',
     preview: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。',
-    fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。阳光移到了沙发左侧，这是全屋最完美的温度。\n\n下午三点，一只鸽子停在了空调外机上。它歪着头看了我很久，然后飞走了。我忽然意识到，在它的眼中，我才是那个被关在玻璃后面的生物。\n\n晚上翻到了去年冬天的照片，那时候窗台上还有积雪。时间过得比毛线球滚得还快。',
+    fullText: diaryDetailFullText,
     tags: ['毛线球', '阳光', '沙发', '鸽子'],
     linkCount: 1,
     imageCount: 1,
@@ -65,7 +71,7 @@ const diaryEntries: Record<string, DiaryEntry> = {
     date: '6月27日',
     time: '18:56',
     preview: '陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。',
-    fullText: '陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。\n\n它的翅膀是半透明的琥珀色，每一次扇动都会落下细碎的金粉。我伸手去够，却怎么也够不着——它在嘲笑我，用那种只有猫才能听懂的频率。\n\n醒来时嘴角还挂着笑，窗帘的影子正好落在枕头旁边，形状像一只飞蛾。',
+    fullText: diaryDetailFullText,
     tags: ['飞蛾', '梦', '窗帘'],
     linkCount: 2,
     imageCount: 1,
@@ -76,7 +82,7 @@ const diaryEntries: Record<string, DiaryEntry> = {
     date: '7月1日',
     time: '18:56',
     preview: '上午把客厅里那个会滚动的毛线球抓了十五遍。',
-    fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。阳光移到了沙发左侧，这是全屋最完美的温度。\n\n我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。\n\n新的一月开始了，我决定做一只更勇敢的猫。起码在梦里面，我已经征服了全世界。',
+    fullText: diaryDetailFullText,
     tags: ['毛线球', '阳光', '沙发', '沉睡', '新月'],
     linkCount: 1,
     imageCount: 1,

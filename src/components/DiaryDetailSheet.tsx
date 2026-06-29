@@ -164,9 +164,8 @@ export default function DiaryDetailSheet({
           </div>
         </div>
 
-        {/* ── Content area — scrollable internally ── */}
+        {/* ── Content area ── */}
         <div
-          className="overflow-y-auto overscroll-contain"
           style={{
             alignSelf: 'stretch',
             height: 742,
@@ -176,12 +175,10 @@ export default function DiaryDetailSheet({
             justifyContent: 'flex-start',
             alignItems: 'center',
             gap: 24,
-            touchAction: 'pan-y',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
+            overflow: 'hidden',
           }}
         >
-          {/* ── Header: date + time + pills ── */}
+          {/* ── Header: date + time + pills + tags (fixed) ── */}
           <div
             style={{
               alignSelf: 'stretch',
@@ -190,6 +187,7 @@ export default function DiaryDetailSheet({
               justifyContent: 'flex-start',
               alignItems: 'flex-start',
               gap: 24,
+              flexShrink: 0,
             }}
           >
             <div
@@ -256,42 +254,91 @@ export default function DiaryDetailSheet({
             </div>
           </div>
 
-          {/* ── Player ── */}
+          {/* ── Player (fixed) ── */}
           <img
             src={publicAsset('img/player.png')}
             alt=""
-            style={{ width: 354, height: 56 }}
+            style={{
+              width: 354,
+              height: 56,
+              flexShrink: 0,
+            }}
             draggable={false}
           />
 
-          {/* ── Full text ── */}
+          {/* ── Scroll window: text + image ── */}
           <div
             style={{
               alignSelf: 'stretch',
-              color: 'rgba(0, 0, 0, 0.90)',
-              opacity: 0.65,
-              fontSize: 16,
-              fontFamily: 'PingFang SC, sans-serif',
-              fontWeight: 400,
-              lineHeight: '24px',
-              whiteSpace: 'pre-wrap',
+              position: 'relative',
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              marginTop: -24,
+              paddingTop: 24,
             }}
           >
-            {entry.fullText}
-          </div>
+            {/* Top fade mask: player 下方的白色渐变遮罩 */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 48,
+                pointerEvents: 'none',
+                zIndex: 2,
+                background:
+                  'linear-gradient(180deg, #FFFFFF 0%, rgba(255, 255, 255, 0.92) 35%, rgba(255, 255, 255, 0) 100%)',
+              }}
+            />
 
-          {/* ── Content image ── */}
-          <img
-            src={publicAsset('img/content_image.png')}
-            alt=""
-            style={{
-              alignSelf: 'stretch',
-              height: 200,
-              borderRadius: 32,
-              objectFit: 'cover',
-            }}
-            draggable={false}
-          />
+            <div
+              className="overflow-y-auto overscroll-contain"
+              style={{
+                height: '100%',
+                paddingTop: 24,
+                paddingBottom: 24,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 24,
+                touchAction: 'pan-y',
+                WebkitOverflowScrolling: 'touch',
+                scrollbarWidth: 'none',
+              }}
+            >
+              {/* Full text */}
+              <div
+                style={{
+                  alignSelf: 'stretch',
+                  color: 'rgba(0, 0, 0, 0.90)',
+                  opacity: 0.65,
+                  fontSize: 16,
+                  fontFamily: 'PingFang SC, sans-serif',
+                  fontWeight: 400,
+                  lineHeight: '24px',
+                  whiteSpace: 'pre-wrap',
+                  flexShrink: 0,
+                }}
+              >
+                {entry.fullText}
+              </div>
+
+              {/* Content image */}
+              <img
+                src={publicAsset('img/content_image.png')}
+                alt=""
+                style={{
+                  alignSelf: 'stretch',
+                  height: 200,
+                  borderRadius: 32,
+                  objectFit: 'cover',
+                  flexShrink: 0,
+                }}
+                draggable={false}
+              />
+            </div>
+          </div>
         </div>
       </motion.div>
     </>
