@@ -43,14 +43,24 @@ function WidgetLabel({ label }: { label: string }) {
   )
 }
 
-function Dock({ onOpenApp, onLock, onAction }: { onOpenApp?: () => void; onLock?: () => void; onAction?: () => void }) {
+function Dock({ onOpenApp, onLock, onAction, onMusic }: { onOpenApp?: () => void; onLock?: () => void; onAction?: () => void; onMusic?: () => void }) {
   return (
     <div className="absolute inset-0 flex flex-row items-center justify-between"
       style={{ padding: '0px 19px' }}>
       {[0, 1, 2, 3].map(i => (
         <div key={i}
-          onClick={i === 0 ? onLock : i === 1 ? onAction : i === 3 ? onOpenApp : undefined}
-          className={i === 0 || i === 1 || i === 3 ? 'cursor-pointer active:scale-90 transition-transform' : ''}>
+          onClick={
+            i === 0
+              ? onLock
+              : i === 1
+                ? onAction
+                : i === 2
+                  ? onMusic
+                  : i === 3
+                    ? onOpenApp
+                    : undefined
+          }
+          className={i === 0 || i === 1 || i === 2 || i === 3 ? 'cursor-pointer active:scale-90 transition-transform' : ''}>
           <AppIcon
             label={i === 0 ? '锁定' : i === 1 ? '吹气' : i === 2 ? '音乐' : '主题'}
             src={publicAsset(`img/应用${13 + i}.png`)}
@@ -425,7 +435,7 @@ export default function Desktop({
     '待机': 3234,    // 97f × 33ms (30fps) — read from file
     '吹气': 3234,    // 97f × 33ms (30fps) — read from file
     '点击': 3234,    // 97f × 33ms (30fps) — assumed same as 待机
-    '听音乐': 0,     // TODO: add file then measure
+    '听音乐': 3234,   // 97f × 33ms (30fps) — assumed same as 待机
     '写日记': 0,     // TODO: add file then measure
   }
   const DEFAULT_ANIM = '待机'
@@ -756,7 +766,7 @@ export default function Desktop({
             />
 
             <div className="absolute inset-0" style={{ zIndex: 2 }}>
-              <Dock onOpenApp={onOpenApp} onLock={lockScreen} onAction={() => playAnim('吹气')} />
+              <Dock onOpenApp={onOpenApp} onLock={lockScreen} onAction={() => playAnim('吹气')} onMusic={() => playAnim('听音乐')} />
             </div>
           </div>
         </motion.div>
@@ -778,7 +788,7 @@ export default function Desktop({
             padding: '0px 19px',
           }}
         >
-          <Dock onOpenApp={onOpenApp} onLock={lockScreen} onAction={() => playAnim('吹气')} />
+          <Dock onOpenApp={onOpenApp} onLock={lockScreen} onAction={() => playAnim('吹气')} onMusic={() => playAnim('听音乐')} />
         </motion.div>
       )}
 
