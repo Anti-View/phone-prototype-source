@@ -53,16 +53,11 @@ export default function DynamicIsland({ expanded, variant = 'square', onClose, c
             : { type: 'spring', stiffness: 260, damping: 32, mass: 1 }
         }
       >
-        {/* UI content — fades in + slight elastic scale after shell expands */}
+        {/* UI content — individual items animate with FloatIn */}
         {expanded && (
-          <motion.div
-            className="w-full h-full"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2, type: 'spring', stiffness: 400, damping: 25, mass: 0.8 }}
-          >
+          <div className="w-full h-full">
             {children}
-          </motion.div>
+          </div>
         )}
       </motion.div>
     </div>

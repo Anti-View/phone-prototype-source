@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, memo, type CSSProperties, type ReactNode } from 'react'
 import { motion, useMotionValue, useSpring, useTransform, useMotionTemplate, animate } from 'framer-motion'
 import DynamicIsland, { type IslandVariant } from './DynamicIsland'
+import { FloatInGroup, FloatInItem } from './FloatIn'
 import { publicAsset } from '../utils/assets'
 
 const UNLOCK_THRESHOLD = 64
@@ -244,56 +245,64 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
   }
 
   return (
-    <div className="flex flex-col items-center" style={{ width: 220, paddingTop: 22, margin: '0 auto', gap: 6 }}>
-      {/* Viewfinder */}
-      <motion.div
-        className="w-full flex-shrink-0 overflow-hidden relative"
-        style={{ height: 164, background: '#c3c3c3', borderRadius: 36 }}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25, duration: 0.25, ease: 'easeOut' }}
-      >
-        {fallback ? (
-          <img src={publicAsset('img/camera/fallback.png')} alt="" className="w-full h-full object-cover" draggable={false} />
-        ) : (
-          <video ref={videoRef} className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} muted playsInline />
-        )}
-        {/* Black flash */}
-        {flash && (
-          <div className="absolute inset-0 bg-black z-10" />
-        )}
-        {/* Pet sticker — appears after viewfinder animation ends */}
-        <motion.div
-          className="absolute"
-          style={{ top: 40, right: 80, width: 178, height: 178, rotate: '15deg' }}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.52, type: 'spring', stiffness: 120, damping: 12, mass: 1.2 }}
+    <FloatInGroup startDelay={160} resetKey="camera-island" step={0.16}>
+      <div className="flex flex-col items-center" style={{ width: 220, paddingTop: 22, margin: '0 auto', gap: 6 }}>
+        {/* Viewfinder */}
+        <FloatInItem
+          index={0}
+          kind="image"
+          className="w-full flex-shrink-0 overflow-hidden relative"
+          style={{ height: 164, background: '#c3c3c3', borderRadius: 36 }}
         >
-          <img
-            ref={gifRef}
-            src={publicAsset('videos/待机.gif')}
-            alt=""
-            className="w-full h-full"
-            draggable={false}
-          />
-        </motion.div>
-      </motion.div>
+          {fallback ? (
+            <img src={publicAsset('img/camera/fallback.png')} alt="" className="w-full h-full object-cover" draggable={false} />
+          ) : (
+            <video ref={videoRef} className="w-full h-full object-cover" style={{ transform: 'scaleX(-1)' }} muted playsInline />
+          )}
+          {/* Black flash */}
+          {flash && (
+            <div className="absolute inset-0 bg-black z-10" />
+          )}
+          {/* Pet sticker — appears after viewfinder */}
+          <FloatInItem
+            index={1}
+            kind="image"
+            className="absolute"
+            style={{ top: 40, right: 80, width: 178, height: 178 }}
+          >
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                transform: 'rotate(15deg)',
+                transformOrigin: 'center center',
+              }}
+            >
+              <img
+                ref={gifRef}
+                src={publicAsset('videos/待机.gif')}
+                alt=""
+                className="w-full h-full"
+                draggable={false}
+              />
+            </div>
+          </FloatInItem>
+        </FloatInItem>
 
-      {/* Button row */}
-      <motion.div
-        className="flex items-center gap-[26px] flex-shrink-0"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.25, ease: 'easeOut' }}
-      >
-        <img src={publicAsset('img/camera/left.png')} alt="" className="w-[28px] h-[28px] object-cover" draggable={false} />
-        <div className="cursor-pointer active:scale-90 transition-transform" onClick={shutter}>
-          <img src={publicAsset('img/camera/middle.png')} alt="" className="w-[76px] h-[56px] object-cover" draggable={false} />
-        </div>
-        <img src={publicAsset('img/camera/right.png')} alt="" className="w-[28px] h-[28px] object-cover" draggable={false} />
-      </motion.div>
-    </div>
+        {/* Button row */}
+        <FloatInItem
+          index={2}
+          kind="item"
+          className="flex items-center gap-[26px] flex-shrink-0"
+        >
+          <img src={publicAsset('img/camera/left.png')} alt="" className="w-[28px] h-[28px] object-cover" draggable={false} />
+          <div className="cursor-pointer active:scale-90 transition-transform" onClick={shutter}>
+            <img src={publicAsset('img/camera/middle.png')} alt="" className="w-[76px] h-[56px] object-cover" draggable={false} />
+          </div>
+          <img src={publicAsset('img/camera/right.png')} alt="" className="w-[28px] h-[28px] object-cover" draggable={false} />
+        </FloatInItem>
+      </div>
+    </FloatInGroup>
   )
 }
 
