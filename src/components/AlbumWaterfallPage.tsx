@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { FloatInGroup, FloatInItem } from './FloatIn'
 
 const pastelColors = [
@@ -12,20 +13,91 @@ const pastelColors = [
   '#F1E4D4',
 ]
 
+type PreviewCard = {
+  id: number
+  color: string
+  src?: string
+  rotation: number
+}
+
+function PolaroidVisual({
+  color,
+  src,
+  rotation,
+  preview = false,
+}: {
+  color: string
+  src?: string
+  rotation: number
+  preview?: boolean
+}) {
+  const scale = preview ? 1.8 : 1
+
+  return (
+    <div
+      className="bg-white"
+      style={{
+        width: 144 * scale,
+        height: 198 * scale,
+        paddingTop: 9 * scale,
+        paddingLeft: 9 * scale,
+        paddingRight: 9 * scale,
+        paddingBottom: 63 * scale,
+        boxShadow: preview
+          ? '0px 24px 80px rgba(0, 0, 0, 0.28)'
+          : '0px 8px 16px rgba(0, 0, 0, 0.04)',
+        borderRadius: 6.55 * scale,
+        transform: `rotate(${rotation}deg)`,
+        transformOrigin: 'center center',
+      }}
+    >
+      <div
+        style={{
+          width: 126 * scale,
+          height: 126 * scale,
+          borderRadius: 3.27 * scale,
+          background: color,
+          overflow: 'hidden',
+        }}
+      >
+        {src && (
+          <img
+            src={src}
+            alt=""
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
+            }}
+            draggable={false}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
 function PolaroidCard({
+  id,
   color,
   src,
   left,
   top,
   rotation,
   revealIndex,
+  onPreview,
+  shouldSuppressPreview,
 }: {
+  id: number
   color: string
   src?: string
   left: number
   top: number
   rotation: number
   revealIndex: number
+  onPreview: (card: PreviewCard) => void
+  shouldSuppressPreview: () => boolean
 }) {
   return (
     <FloatInItem
@@ -33,45 +105,26 @@ function PolaroidCard({
       kind="card"
       className="absolute"
       style={{ left, top }}
+      layoutId={`polaroid-${id}`}
+      onClick={(e) => {
+        e.stopPropagation()
+
+        if (shouldSuppressPreview()) return
+
+        onPreview({
+          id,
+          color,
+          src,
+          rotation,
+        })
+      }}
     >
-      <div
-        className="bg-white"
-        style={{
-          width: 144,
-          height: 198,
-          paddingTop: 9,
-          paddingLeft: 9,
-          paddingRight: 9,
-          paddingBottom: 63,
-          boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.04)',
-          borderRadius: 6.55,
-          transform: `rotate(${rotation}deg)`,
-          transformOrigin: 'center center',
-        }}
-      >
-        <div
-          style={{
-            width: 126,
-            height: 126,
-            borderRadius: 3.27,
-            background: color,
-            overflow: 'hidden',
-          }}
-        >
-          {src && (
-            <img
-              src={src}
-              alt=""
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-              draggable={false}
-            />
-          )}
-        </div>
+      <div style={{ cursor: 'pointer' }}>
+        <PolaroidVisual
+          color={color}
+          src={src}
+          rotation={rotation}
+        />
       </div>
     </FloatInItem>
   )
@@ -89,6 +142,9 @@ export default function AlbumWaterfallPage({
   const momentumRef = useRef<number | null>(null)
   const rubberOffsetRef = useRef(0)
   const rubberReturnRef = useRef<number | null>(null)
+
+  const [previewCard, setPreviewCard] = useState<PreviewCard | null>(null)
+  const suppressPreviewClickRef = useRef(false)
 
   const dragRef = useRef({
     active: false,
@@ -248,6 +304,13 @@ export default function AlbumWaterfallPage({
     momentumRef.current = requestAnimationFrame(step)
   }, [getMaxScroll, resetRubberOffset])
 
+  const openPreview = useCallback((card: PreviewCard) => {
+    cancelMomentum()
+    cancelRubberReturn()
+    setRubberOffset(0)
+    setPreviewCard(card)
+  }, [cancelMomentum, cancelRubberReturn, setRubberOffset])
+
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
@@ -262,6 +325,8 @@ export default function AlbumWaterfallPage({
     cancelMomentum()
     cancelRubberReturn()
     setRubberOffset(0)
+
+    suppressPreviewClickRef.current = false
 
     dragRef.current = {
       active: true,
@@ -294,6 +359,11 @@ export default function AlbumWaterfallPage({
     state.lastTime = now
 
     const totalDeltaY = e.clientY - state.startY
+
+    if (Math.abs(totalDeltaY) > 5) {
+      suppressPreviewClickRef.current = true
+    }
+
     const rawScrollTop = state.startScrollTop - totalDeltaY
     const maxScroll = getMaxScroll(el)
 
@@ -342,6 +412,10 @@ export default function AlbumWaterfallPage({
         startMomentum(releaseVelocity)
       }
     }
+
+    requestAnimationFrame(() => {
+      suppressPreviewClickRef.current = false
+    })
   }, [resetRubberOffset, startMomentum, getMaxScroll])
 
   useEffect(() => {
@@ -432,18 +506,62 @@ export default function AlbumWaterfallPage({
               return (
                 <PolaroidCard
                   key={card.id}
+                  id={card.id}
                   color={card.color}
                   src={card.src}
                   left={card.left}
                   top={card.top}
                   rotation={card.rotation}
                   revealIndex={rowRevealIndex}
+                  onPreview={openPreview}
+                  shouldSuppressPreview={() => suppressPreviewClickRef.current}
                 />
               )
             })}
           </FloatInGroup>
         </div>
       </div>
+
+      {/* Preview overlay */}
+      <AnimatePresence>
+        {previewCard && (
+          <>
+            <motion.div
+              className="absolute inset-0 z-30 bg-black"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              onClick={() => setPreviewCard(null)}
+            />
+
+            <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+              <motion.div
+                layoutId={`polaroid-${previewCard.id}`}
+                transition={{
+                  layout: {
+                    type: 'spring',
+                    stiffness: 260,
+                    damping: 28,
+                    mass: 0.9,
+                  },
+                }}
+                style={{
+                  pointerEvents: 'auto',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <PolaroidVisual
+                  color={previewCard.color}
+                  src={previewCard.src}
+                  rotation={previewCard.rotation}
+                  preview
+                />
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
