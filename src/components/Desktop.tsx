@@ -437,22 +437,35 @@ export default function Desktop({
   }, [onAlbumCapture])
 
   /* ── Character animation state (durations from actual WebP files in public/videos/) ── */
-  const ANIM: Record<string, number> = {
-    '待机': 3993,    // 121f × 33ms (30fps) — read from file
-    '吹气': 3234,    //  97f × 33ms (30fps) — read from file
-    '点击': 3234,    //  97f × 33ms (30fps) — read from file
-    '听音乐': 3993,   // 121f × 33ms (30fps) — read from file
-    '写日记': 6369,   // 193f × 33ms (30fps) — read from file
+  const FRAME_MS = 33
+  const SAFE_EDGE_FRAMES = 15
+  const CROSSFADE_FRAMES = 10
+  const CROSSFADE_MS = CROSSFADE_FRAMES * FRAME_MS
+
+  const ANIM: Record<string, { duration: number; frames: number }> = {
+    '待机': { duration: 3993, frames: 121 },
+    '吹气': { duration: 3234, frames: 97 },
+    '点击': { duration: 3234, frames: 97 },
+    '听音乐': { duration: 3993, frames: 121 },
+    '写日记': { duration: 6369, frames: 193 },
   }
   const DEFAULT_ANIM = '待机'
-  const MIN_HOLD_MS = 240
+
+  const EDGE_SAFE_ANIMS = new Set(['待机', '吹气', '点击', '听音乐'])
+  const END_ONLY_SAFE_ANIMS = new Set(['写日记'])
+
+  const getAnimConfig = (name: string) => ANIM[name] || ANIM[DEFAULT_ANIM]
 
   const [charAnim, setCharAnim] = useState(DEFAULT_ANIM)
+  const [prevCharAnim, setPrevCharAnim] = useState<string | null>(null)
+  const [isCrossfading, setIsCrossfading] = useState(false)
+
   const currentAnimRef = useRef(DEFAULT_ANIM)
   const currentStartedAtRef = useRef(Date.now())
   const pendingAnimRef = useRef<string | null>(null)
   const switchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const returnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const crossfadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearSwitchTimer = () => {
     if (switchTimerRef.current) {
@@ -468,16 +481,71 @@ export default function Desktop({
     }
   }
 
+  const clearCrossfadeTimer = () => {
+    if (crossfadeTimerRef.current) {
+      clearTimeout(crossfadeTimerRef.current)
+      crossfadeTimerRef.current = null
+    }
+  }
+
+  const getMsUntilSafeSwitch = () => {
+    const current = currentAnimRef.current
+    const config = getAnimConfig(current)
+    const elapsed = (Date.now() - currentStartedAtRef.current) % config.duration
+    const frame = Math.floor(elapsed / FRAME_MS)
+
+    const endSafeStartFrame = Math.max(0, config.frames - SAFE_EDGE_FRAMES)
+    const endSafeStartMs = endSafeStartFrame * FRAME_MS
+
+    if (EDGE_SAFE_ANIMS.has(current)) {
+      const inStartSafe = frame < SAFE_EDGE_FRAMES
+      const inEndSafe = frame >= endSafeStartFrame
+
+      if (inStartSafe || inEndSafe) return 0
+
+      return Math.max(0, endSafeStartMs - elapsed)
+    }
+
+    if (END_ONLY_SAFE_ANIMS.has(current)) {
+      const inEndSafe = frame >= endSafeStartFrame
+
+      if (inEndSafe) return 0
+
+      return Math.max(0, endSafeStartMs - elapsed)
+    }
+
+    return Math.max(0, endSafeStartMs - elapsed)
+  }
+
   const transitionTo = useCallback((name: string) => {
+    if (!ANIM[name]) return
+
     clearSwitchTimer()
     clearReturnTimer()
+    clearCrossfadeTimer()
+
+    const from = currentAnimRef.current
 
     pendingAnimRef.current = null
+
+    if (from === name) {
+      return
+    }
+
+    setPrevCharAnim(from)
+    setCharAnim(name)
+    setIsCrossfading(true)
+
     currentAnimRef.current = name
     currentStartedAtRef.current = Date.now()
-    setCharAnim(name)
 
-    const targetDur = ANIM[name] || ANIM[DEFAULT_ANIM]
+    crossfadeTimerRef.current = setTimeout(() => {
+      setPrevCharAnim(null)
+      setIsCrossfading(false)
+      crossfadeTimerRef.current = null
+    }, CROSSFADE_MS)
+
+    const targetDur = getAnimConfig(name).duration
 
     returnTimerRef.current = setTimeout(() => {
       returnTimerRef.current = null
@@ -500,8 +568,7 @@ export default function Desktop({
     pendingAnimRef.current = name
     clearSwitchTimer()
 
-    const elapsed = Date.now() - currentStartedAtRef.current
-    const wait = Math.max(0, MIN_HOLD_MS - elapsed)
+    const wait = getMsUntilSafeSwitch()
 
     switchTimerRef.current = setTimeout(() => {
       switchTimerRef.current = null
@@ -523,6 +590,7 @@ export default function Desktop({
     return () => {
       clearSwitchTimer()
       clearReturnTimer()
+      clearCrossfadeTimer()
     }
   }, [])
 
@@ -726,7 +794,32 @@ export default function Desktop({
             borderRadius: '50%',
           }}
         />
-        <img src={publicAsset(`videos/${charAnim}.webp`)} alt="" className="w-full h-full object-cover relative" draggable={false} style={{ position: 'relative', zIndex: 1 }} />
+        {/* Dual-layer crossfade container */}
+        <div className="absolute inset-0" style={{ zIndex: 1 }}>
+          {prevCharAnim && (
+            <motion.img
+              key={`prev-${prevCharAnim}`}
+              src={publicAsset(`videos/${prevCharAnim}.webp`)}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              draggable={false}
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: CROSSFADE_MS / 1000, ease: 'linear' }}
+            />
+          )}
+
+          <motion.img
+            key={`current-${charAnim}`}
+            src={publicAsset(`videos/${charAnim}.webp`)}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            draggable={false}
+            initial={prevCharAnim ? { opacity: 0 } : { opacity: 1 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: CROSSFADE_MS / 1000, ease: 'linear' }}
+          />
+        </div>
       </motion.div>
 
       {/* ── Unlock Div: lock icon + time + bottom glass icons (370×731, bottom=48) ── */}
