@@ -236,12 +236,12 @@ export default function DiaryDetailSheet({
         onClick={onClose}
       />
 
-      {/* Animated sheet — spring directly positioned, top can overshoot freely */}
+      {/* Animated sheet — 1000px body, 812 stays visible, spring overshoot covered */}
       <motion.div
-        className="absolute left-0 right-0 top-[62px] bottom-0 z-[60] pointer-events-auto"
-        initial={{ y: '100%' }}
+        className="absolute left-0 right-0 top-[62px] z-[60] h-[1000px] pointer-events-auto"
+        initial={{ y: 812 }}
         animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+        exit={{ y: 812 }}
         transition={{
           type: 'spring',
           damping: 28,
@@ -250,14 +250,22 @@ export default function DiaryDetailSheet({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-          {/* Real visible sheet */}
-          <div
-            className="relative w-full h-full bg-white rounded-t-[38px] flex flex-col overflow-hidden"
-            style={{
-              boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
-              fontFamily: 'var(--font-ui)',
-            }}
-          >
+        {/* One continuous white background — no seams */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-white rounded-t-[38px]"
+          style={{
+            boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
+          }}
+        />
+
+        {/* Content viewport: 812px, keeps internal layout unchanged */}
+        <div
+          className="relative z-10 w-full h-[812px] rounded-t-[38px] flex flex-col overflow-hidden"
+          style={{
+            fontFamily: 'var(--font-ui)',
+          }}
+        >
         {/* ── Top handle + controls ── */}
         <div
           style={{
@@ -530,11 +538,6 @@ export default function DiaryDetailSheet({
           </div>
         </div>
         </div>
-        {/* Bottom bleed: fills gap during spring overshoot */}
-        <div
-          aria-hidden="true"
-          className="absolute left-0 right-0 top-full h-[120px] bg-white"
-        />
       </motion.div>
     </>
   )
