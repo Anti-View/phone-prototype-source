@@ -439,7 +439,7 @@ export default function Desktop({
   /* ── Character animation state (durations from actual WebP files in public/videos/) ── */
   const FRAME_MS = 33
   const SAFE_EDGE_FRAMES = 15
-  const CROSSFADE_FRAMES = 10
+  const CROSSFADE_FRAMES = 4
   const CROSSFADE_MS = CROSSFADE_FRAMES * FRAME_MS
 
   const ANIM: Record<string, { duration: number; frames: number }> = {
@@ -458,7 +458,6 @@ export default function Desktop({
 
   const [charAnim, setCharAnim] = useState(DEFAULT_ANIM)
   const [prevCharAnim, setPrevCharAnim] = useState<string | null>(null)
-  const [isCrossfading, setIsCrossfading] = useState(false)
 
   const currentAnimRef = useRef(DEFAULT_ANIM)
   const currentStartedAtRef = useRef(Date.now())
@@ -534,14 +533,12 @@ export default function Desktop({
 
     setPrevCharAnim(from)
     setCharAnim(name)
-    setIsCrossfading(true)
 
     currentAnimRef.current = name
     currentStartedAtRef.current = Date.now()
 
     crossfadeTimerRef.current = setTimeout(() => {
       setPrevCharAnim(null)
-      setIsCrossfading(false)
       crossfadeTimerRef.current = null
     }, CROSSFADE_MS)
 
@@ -794,8 +791,17 @@ export default function Desktop({
             borderRadius: '50%',
           }}
         />
-        {/* Dual-layer crossfade container */}
+        {/* Crossfade: new animation solid on bottom, old anim fades out on top */}
         <div className="absolute inset-0" style={{ zIndex: 1 }}>
+          <img
+            key={`current-${charAnim}`}
+            src={publicAsset(`videos/${charAnim}.webp`)}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            draggable={false}
+            style={{ zIndex: 1, opacity: 1 }}
+          />
+
           {prevCharAnim && (
             <motion.img
               key={`prev-${prevCharAnim}`}
@@ -805,20 +811,10 @@ export default function Desktop({
               draggable={false}
               initial={{ opacity: 1 }}
               animate={{ opacity: 0 }}
-              transition={{ duration: CROSSFADE_MS / 1000, ease: 'linear' }}
+              transition={{ duration: CROSSFADE_MS / 1000, ease: 'easeOut' }}
+              style={{ zIndex: 2 }}
             />
           )}
-
-          <motion.img
-            key={`current-${charAnim}`}
-            src={publicAsset(`videos/${charAnim}.webp`)}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            draggable={false}
-            initial={prevCharAnim ? { opacity: 0 } : { opacity: 1 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: CROSSFADE_MS / 1000, ease: 'linear' }}
-          />
         </div>
       </motion.div>
 
