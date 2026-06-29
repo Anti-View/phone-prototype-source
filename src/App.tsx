@@ -270,7 +270,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* B5 — left, no image */}
+                {/* B5 — left */}
                 <div className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
@@ -283,7 +283,11 @@ export default function App() {
                     <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月28日</span>
                   </div>
                   <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
-                    确认它没有反抗能力。
+                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。
+                  </div>
+                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                    <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
                   </div>
                 </div>
               </div>
