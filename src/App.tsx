@@ -22,6 +22,7 @@ import { publicAsset } from './utils/assets'
 import { useAppState } from './hooks/useAppState'
 import DiaryDetailSheet from './components/DiaryDetailSheet'
 import AlbumWaterfallPage from './components/AlbumWaterfallPage'
+import CollectionWaterfallPage from './components/CollectionWaterfallPage'
 import { FloatInGroup, FloatInItem } from './components/FloatIn'
 import type { DiaryEntry } from './types/diary'
 
@@ -148,6 +149,7 @@ export default function App() {
     goToDesktop,
     openDiary,
     openAlbum,
+    openCollection,
   } = useAppState()
 
   const [toastVisible, setToastVisible] = useState(false)
@@ -447,7 +449,11 @@ export default function App() {
     }
   }, [cancelDiaryMomentum, cancelDiaryRubberReturn])
 
-  const pageActive = current !== 'desktop' && current !== 'diary' && current !== 'album'
+  const pageActive =
+    current !== 'desktop' &&
+    current !== 'diary' &&
+    current !== 'album' &&
+    current !== 'collection'
 
   return (
     <PhoneFrame>
@@ -461,6 +467,7 @@ export default function App() {
           onOpenApp={openTheme}
           onOpenDiary={openDiary}
           onOpenAlbum={openAlbum}
+          onOpenCollection={openCollection}
           onAlbumCapture={handleAlbumCapture}
           characterAnimRequest={characterAnimRequest}
         />
@@ -770,6 +777,22 @@ export default function App() {
             onBack={goToDesktop}
             photos={albumPhotos}
           />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Collection waterfall page — slides in from right ── */}
+      <AnimatePresence>
+        {current === 'collection' && (
+          <motion.div
+            key="collection-page"
+            className="absolute inset-0 z-20"
+            initial={{ x: 402 }}
+            animate={{ x: 0 }}
+            exit={{ x: 402 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
+          >
+            <CollectionWaterfallPage onBack={goToDesktop} />
           </motion.div>
         )}
       </AnimatePresence>

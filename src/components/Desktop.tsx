@@ -413,12 +413,52 @@ function Panel1({ onWidgetClick, photos, onOpenDiary, onOpenAlbum }: {
 }
 
 /* ── Panel 2 ── */
-function Panel2() {
+function LargeWidgetPressable({
+  children,
+  onTap,
+  className,
+  style,
+}: {
+  children: ReactNode
+  onTap?: () => void
+  className?: string
+  style?: CSSProperties
+}) {
+  const tap = useTap(() => {
+    onTap?.()
+  })
+
+  return (
+    <div
+      className={className}
+      style={{
+        ...style,
+        transformOrigin: 'center center',
+      }}
+    >
+      <div
+        className="w-full h-full cursor-pointer active:scale-[0.98] transition-transform"
+        style={{
+          transformOrigin: 'center center',
+        }}
+        {...tap}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Panel2({ onOpenCollection }: { onOpenCollection?: () => void }) {
   return (
     <ContentPanel>
-      <div className="w-[350px] h-[350px] bg-white relative" style={{ borderRadius: 28 }}>
+      <LargeWidgetPressable
+        onTap={onOpenCollection}
+        className="w-[350px] h-[350px] bg-white relative"
+        style={{ borderRadius: 28 }}
+      >
         <img src={publicAsset('img/洞洞板_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} style={{ borderRadius: 28 }} />
-      </div>
+      </LargeWidgetPressable>
       <div className="absolute left-0 top-[382px]"><IconGrid icons={[
                 publicAsset('img/app_icon/icon_17.png'),
                 publicAsset('img/app_icon/icon_18.png'),
@@ -436,12 +476,19 @@ function Panel2() {
 }
 
 /* ── Panel 3 ── */
-function Panel3() {
+function Panel3({ onOpenCollection }: { onOpenCollection?: () => void }) {
   return (
     <ContentPanel>
-      <div className="w-[350px] h-[350px] relative">
+      <LargeWidgetPressable
+        onTap={onOpenCollection}
+        className="w-[350px] h-[350px] relative"
+        style={{
+          borderRadius: 28,
+          overflow: 'hidden',
+        }}
+      >
         <img src={publicAsset('img/展柜_成品.png')} alt="" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-      </div>
+      </LargeWidgetPressable>
       <div className="absolute left-0 top-[382px]"><IconGrid icons={[
                 publicAsset('img/app_icon/icon_05.png'),
                 publicAsset('img/app_icon/icon_06.png'),
@@ -464,12 +511,13 @@ type CharacterAnimRequest = {
   name: string
 }
 
-interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void; onOpenAlbum?: () => void; onAlbumCapture?: (dataURL: string) => void; characterAnimRequest?: CharacterAnimRequest | null }
+interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void; onOpenAlbum?: () => void; onOpenCollection?: () => void; onAlbumCapture?: (dataURL: string) => void; characterAnimRequest?: CharacterAnimRequest | null }
 
 export default function Desktop({
   onOpenApp,
   onOpenDiary,
   onOpenAlbum,
+  onOpenCollection,
   onAlbumCapture,
   characterAnimRequest,
 }: DesktopProps) {
@@ -1046,8 +1094,8 @@ export default function Desktop({
         onDragEnd={handlePageDragEnd}
       >
         <div className="w-[402px] h-full flex-shrink-0"><Panel1 onWidgetClick={(type) => setActiveIsland(type as IslandType)} photos={polaroidPhotos} onOpenDiary={onOpenDiary} onOpenAlbum={onOpenAlbum} /></div>
-        <div className="w-[402px] h-full flex-shrink-0"><Panel2 /></div>
-        <div className="w-[402px] h-full flex-shrink-0"><Panel3 /></div>
+        <div className="w-[402px] h-full flex-shrink-0"><Panel2 onOpenCollection={onOpenCollection} /></div>
+        <div className="w-[402px] h-full flex-shrink-0"><Panel3 onOpenCollection={onOpenCollection} /></div>
       </motion.div>
 
       {/* ── Dock: visible when unlocked, slides up from below ── */}

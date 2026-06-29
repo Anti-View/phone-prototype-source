@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 
-export type AppState = 'idle' | 'upload' | 'gallery' | 'loading' | 'ready' | 'diary' | 'album' | 'desktop'
+export type AppState = 'idle' | 'upload' | 'gallery' | 'loading' | 'ready' | 'diary' | 'album' | 'collection' | 'desktop'
 
 export function useAppState() {
   const [current, setCurrent] = useState<AppState>('desktop')
@@ -110,7 +110,7 @@ export function useAppState() {
   const goToDesktop = useCallback(async () => {
     if (transitioning.current || currentRef.current === 'desktop') return
     const s = currentRef.current
-    if (s !== 'idle' && s !== 'diary' && s !== 'album') return
+    if (s !== 'idle' && s !== 'diary' && s !== 'album' && s !== 'collection') return
     transitioning.current = true
     setCurrent('desktop')
     await wait(400)
@@ -133,6 +133,14 @@ export function useAppState() {
     transitioning.current = false
   }, [])
 
+  const openCollection = useCallback(async () => {
+    if (transitioning.current || currentRef.current !== 'desktop') return
+    transitioning.current = true
+    setCurrent('collection')
+    await wait(400)
+    transitioning.current = false
+  }, [])
+
   return {
     current,
     selectedImage,
@@ -147,5 +155,6 @@ export function useAppState() {
     goToDesktop,
     openDiary,
     openAlbum,
+    openCollection,
   }
 }
