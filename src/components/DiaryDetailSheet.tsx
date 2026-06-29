@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, type PointerEvent } from 'react'
 import { motion } from 'framer-motion'
 import type { DiaryEntry } from '../types/diary'
 import { publicAsset } from '../utils/assets'
@@ -54,6 +55,153 @@ export default function DiaryDetailSheet({
   entry: DiaryEntry
   onClose: () => void
 }) {
+  const detailScrollRef = useRef<HTMLDivElement | null>(null)
+  const detailMomentumRef = useRef<number | null>(null)
+
+  const detailDragRef = useRef({
+    active: false,
+    pointerId: -1,
+    startY: 0,
+    startScrollTop: 0,
+    lastY: 0,
+    lastTime: 0,
+    velocity: 0,
+  })
+
+  const getDetailMaxScroll = useCallback((el: HTMLDivElement) => {
+    return Math.max(0, el.scrollHeight - el.clientHeight)
+  }, [])
+
+  const cancelDetailMomentum = useCallback(() => {
+    if (detailMomentumRef.current !== null) {
+      cancelAnimationFrame(detailMomentumRef.current)
+      detailMomentumRef.current = null
+    }
+  }, [])
+
+  const startDetailMomentum = useCallback((initialVelocity: number) => {
+    const el = detailScrollRef.current
+    if (!el) return
+
+    let velocity = initialVelocity
+    let lastTime = performance.now()
+
+    const step = (now: number) => {
+      const dt = Math.min(32, now - lastTime)
+      lastTime = now
+
+      const maxScroll = getDetailMaxScroll(el)
+      const next = el.scrollTop + velocity * dt
+
+      if (next < 0) {
+        el.scrollTop = 0
+        detailMomentumRef.current = null
+        return
+      }
+
+      if (next > maxScroll) {
+        el.scrollTop = maxScroll
+        detailMomentumRef.current = null
+        return
+      }
+
+      el.scrollTop = next
+      velocity *= Math.pow(0.95, dt / 16.67)
+
+      if (Math.abs(velocity) < 0.02) {
+        detailMomentumRef.current = null
+        return
+      }
+
+      detailMomentumRef.current = requestAnimationFrame(step)
+    }
+
+    detailMomentumRef.current = requestAnimationFrame(step)
+  }, [getDetailMaxScroll])
+
+  const handleDetailPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return
+    if (e.button !== 0) return
+
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, [role="button"]')) return
+
+    const el = detailScrollRef.current
+    if (!el) return
+    if (el.scrollHeight <= el.clientHeight) return
+
+    cancelDetailMomentum()
+
+    detailDragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startY: e.clientY,
+      startScrollTop: el.scrollTop,
+      lastY: e.clientY,
+      lastTime: performance.now(),
+      velocity: 0,
+    }
+
+    el.style.cursor = 'grabbing'
+    el.setPointerCapture(e.pointerId)
+  }, [cancelDetailMomentum])
+
+  const handleDetailPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const state = detailDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = detailScrollRef.current
+    if (!el) return
+
+    const now = performance.now()
+    const dt = Math.max(1, now - state.lastTime)
+    const dy = e.clientY - state.lastY
+
+    const instantVelocity = -dy / dt
+    state.velocity = state.velocity * 0.7 + instantVelocity * 0.3
+    state.lastY = e.clientY
+    state.lastTime = now
+
+    const totalDeltaY = e.clientY - state.startY
+    const rawScrollTop = state.startScrollTop - totalDeltaY
+    const maxScroll = getDetailMaxScroll(el)
+
+    el.scrollTop = Math.max(0, Math.min(maxScroll, rawScrollTop))
+
+    e.preventDefault()
+  }, [getDetailMaxScroll])
+
+  const stopDetailDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const state = detailDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = detailScrollRef.current
+    if (el?.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
+    }
+
+    if (el) {
+      el.style.cursor = 'grab'
+    }
+
+    detailDragRef.current.active = false
+    detailDragRef.current.pointerId = -1
+
+    const releaseVelocity = state.velocity
+
+    if (Math.abs(releaseVelocity) > 0.08) {
+      startDetailMomentum(releaseVelocity)
+    }
+  }, [startDetailMomentum])
+
+  useEffect(() => {
+    return () => {
+      cancelDetailMomentum()
+    }
+  }, [cancelDetailMomentum])
+
   return (
     <>
       {/* Dark backdrop */}
@@ -66,9 +214,9 @@ export default function DiaryDetailSheet({
         onClick={onClose}
       />
 
-      {/* Bottom sheet */}
+      {/* Bottom sheet — tween, no overshoot */}
       <motion.div
-        className="absolute bottom-0 left-0 w-full h-[812px] bg-white rounded-t-[38px] z-[60] flex flex-col overflow-hidden"
+        className="absolute left-0 right-0 top-[62px] bottom-0 bg-white rounded-t-[38px] z-[60] flex flex-col overflow-hidden"
         style={{
           boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
           fontFamily: 'var(--font-ui)',
@@ -76,7 +224,11 @@ export default function DiaryDetailSheet({
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 280, mass: 1.1 }}
+        transition={{
+          type: 'tween',
+          duration: 0.42,
+          ease: [0.22, 1, 0.36, 1],
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Top handle + controls ── */}
@@ -168,7 +320,8 @@ export default function DiaryDetailSheet({
         <div
           style={{
             alignSelf: 'stretch',
-            height: 742,
+            flex: 1,
+            minHeight: 0,
             padding: 24,
             display: 'flex',
             flexDirection: 'column',
@@ -294,18 +447,25 @@ export default function DiaryDetailSheet({
             />
 
             <div
+              ref={detailScrollRef}
               className="overflow-y-auto overscroll-contain"
               style={{
                 height: '100%',
                 paddingTop: 24,
-                paddingBottom: 24,
+                paddingBottom: 0,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 24,
                 touchAction: 'pan-y',
                 WebkitOverflowScrolling: 'touch',
                 scrollbarWidth: 'none',
+                cursor: 'grab',
               }}
+              onPointerDown={handleDetailPointerDown}
+              onPointerMove={handleDetailPointerMove}
+              onPointerUp={stopDetailDrag}
+              onPointerCancel={stopDetailDrag}
+              onLostPointerCapture={stopDetailDrag}
             >
               {/* Full text */}
               <div
