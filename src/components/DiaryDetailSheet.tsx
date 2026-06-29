@@ -480,9 +480,7 @@ export default function DiaryDetailSheet({
                   whiteSpace: 'pre-wrap',
                   flexShrink: 0,
                 }}
-              >
-                {entry.fullText}
-              </div>
+              >{entry.fullText.trim()}</div>
 
               {/* Content image */}
               <img
