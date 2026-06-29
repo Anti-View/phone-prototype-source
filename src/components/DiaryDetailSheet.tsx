@@ -236,12 +236,12 @@ export default function DiaryDetailSheet({
         onClick={onClose}
       />
 
-      {/* Animated sheet — 1000px body, 812 stays visible, spring overshoot covered */}
+      {/* Animated sheet — 1000px body, 932px visible, spring overshoot covered */}
       <motion.div
         className="absolute left-0 right-0 top-[62px] z-[60] h-[1000px] pointer-events-auto"
-        initial={{ y: 812 }}
+        initial={{ y: 932 }}
         animate={{ y: 0 }}
-        exit={{ y: 812 }}
+        exit={{ y: 932 }}
         transition={{
           type: 'spring',
           damping: 28,
@@ -261,7 +261,7 @@ export default function DiaryDetailSheet({
 
         {/* Content viewport: 812px, keeps internal layout unchanged */}
         <div
-          className="relative z-10 w-full h-[812px] rounded-t-[38px] flex flex-col overflow-hidden"
+          className="relative z-10 w-full h-[932px] rounded-t-[38px] flex flex-col overflow-hidden"
           style={{
             fontFamily: 'var(--font-ui)',
           }}
