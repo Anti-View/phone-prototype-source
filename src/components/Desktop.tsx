@@ -537,6 +537,10 @@ export default function Desktop({
 
   const getMsUntilSafeSwitch = () => {
     const current = currentAnimRef.current
+
+    // 待机 is ambient; ping-pong 240f would otherwise delay all interaction
+    if (current === DEFAULT_ANIM) return 0
+
     const config = getAnimConfig(current)
     const elapsed = (Date.now() - currentStartedAtRef.current) % config.duration
     const frame = Math.floor(elapsed / FRAME_MS)
