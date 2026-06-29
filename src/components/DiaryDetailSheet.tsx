@@ -236,22 +236,20 @@ export default function DiaryDetailSheet({
         onClick={onClose}
       />
 
-      {/* Sheet viewport — clips overshoot, never exposes bottom */}
-      <div className="absolute left-0 right-0 top-[62px] bottom-0 z-[60] overflow-hidden pointer-events-none">
-        {/* Animated sheet wrapper — spring only, no visual styles */}
-        <motion.div
-          className="absolute left-0 right-0 top-0 h-full pointer-events-auto"
-          initial={{ y: '100%' }}
-          animate={{ y: 0 }}
-          exit={{ y: '100%' }}
-          transition={{
-            type: 'spring',
-            damping: 28,
-            stiffness: 280,
-            mass: 1.1,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
+      {/* Animated sheet — spring directly positioned, top can overshoot freely */}
+      <motion.div
+        className="absolute left-0 right-0 top-[62px] bottom-0 z-[60] pointer-events-auto"
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        exit={{ y: '100%' }}
+        transition={{
+          type: 'spring',
+          damping: 28,
+          stiffness: 280,
+          mass: 1.1,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
           {/* Real visible sheet */}
           <div
             className="relative w-full h-full bg-white rounded-t-[38px] flex flex-col overflow-hidden"
@@ -538,7 +536,6 @@ export default function DiaryDetailSheet({
           className="absolute left-0 right-0 top-full h-[120px] bg-white"
         />
       </motion.div>
-      </div>
     </>
   )
 }
