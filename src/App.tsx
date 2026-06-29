@@ -116,6 +116,23 @@ export default function App() {
     setAlbumPhotos(prev => [dataURL, ...prev].slice(0, 10))
   }, [])
 
+  const [characterAnimRequest, setCharacterAnimRequest] = useState<{
+    id: number
+    name: string
+  } | null>(null)
+
+  const requestCharacterAnim = useCallback((name: string) => {
+    setCharacterAnimRequest({
+      id: Date.now(),
+      name,
+    })
+  }, [])
+
+  const handleDiaryBackToDesktop = useCallback(async () => {
+    await goToDesktop()
+    requestCharacterAnim('写日记')
+  }, [goToDesktop, requestCharacterAnim])
+
   const showToast = useCallback(() => {
     setToastKey(k => k + 1)
     setToastVisible(true)
@@ -359,6 +376,7 @@ export default function App() {
           onOpenDiary={openDiary}
           onOpenAlbum={openAlbum}
           onAlbumCapture={handleAlbumCapture}
+          characterAnimRequest={characterAnimRequest}
         />
       </motion.div>
 
@@ -444,7 +462,7 @@ export default function App() {
             {/* Solid bg */}
             <div className="absolute inset-0" style={{ background: '#EEEFF4' }} />
             {/* Fixed NavBar */}
-            <NavBar onHome={goToDesktop} />
+            <NavBar onHome={handleDiaryBackToDesktop} />
             {/* Scrollable waterfall content */}
             <div
               ref={diaryScrollRef}

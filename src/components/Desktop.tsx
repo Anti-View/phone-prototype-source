@@ -400,13 +400,19 @@ function Panel3() {
 }
 
 /* ── Desktop ── */
-interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void; onOpenAlbum?: () => void; onAlbumCapture?: (dataURL: string) => void }
+type CharacterAnimRequest = {
+  id: number
+  name: string
+}
+
+interface DesktopProps { onOpenApp?: () => void; onOpenDiary?: () => void; onOpenAlbum?: () => void; onAlbumCapture?: (dataURL: string) => void; characterAnimRequest?: CharacterAnimRequest | null }
 
 export default function Desktop({
   onOpenApp,
   onOpenDiary,
   onOpenAlbum,
   onAlbumCapture,
+  characterAnimRequest,
 }: DesktopProps) {
   const [isLocked, setIsLocked] = useState(true)
   const [unlockedPage, setUnlockedPage] = useState(0)
@@ -436,7 +442,7 @@ export default function Desktop({
     '吹气': 3234,    // 97f × 33ms (30fps) — read from file
     '点击': 3234,    // 97f × 33ms (30fps) — assumed same as 待机
     '听音乐': 3234,   // 97f × 33ms (30fps) — assumed same as 待机
-    '写日记': 0,     // TODO: add file then measure
+    '写日记': 3234,   // 97f × 33ms (30fps) — assumed same as 待机
   }
   const DEFAULT_ANIM = '待机'
   const [charAnim, setCharAnim] = useState(DEFAULT_ANIM)
@@ -477,6 +483,12 @@ export default function Desktop({
 
   // cleanup timer on unmount
   useEffect(() => () => { if (charTimerRef.current) clearTimeout(charTimerRef.current) }, [])
+
+  // respond to external character animation requests (e.g. from diary back-to-desktop)
+  useEffect(() => {
+    if (!characterAnimRequest) return
+    playAnim(characterAnimRequest.name)
+  }, [characterAnimRequest?.id])
 
   /* ── Motion values ── */
   const unlockY = useMotionValue(0)
