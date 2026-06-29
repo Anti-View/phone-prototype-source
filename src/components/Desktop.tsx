@@ -27,16 +27,40 @@ function AppIcon({ label, src }: { label?: string; src?: string }) {
   )
 }
 
+function PressableAppIcon({
+  label,
+  src,
+}: {
+  label?: string
+  src?: string
+}) {
+  return (
+    <div
+      className="cursor-pointer active:scale-90 transition-transform"
+      style={{
+        width: 64,
+        height: 64,
+        transformOrigin: 'center center',
+      }}
+      onClick={(e) => {
+        e.stopPropagation()
+      }}
+    >
+      <AppIcon label={label} src={src} />
+    </div>
+  )
+}
+
 function IconGrid({ labels, icons }: { labels?: [string, string, string, string]; icons?: [string, string, string, string] }) {
   return (
     <div className="w-[159px] h-[159px] flex flex-col gap-[31px] items-center justify-center">
       <div className="flex gap-[31px]">
-        <AppIcon label={labels?.[0]} src={icons?.[0]} />
-        <AppIcon label={labels?.[1]} src={icons?.[1]} />
+        <PressableAppIcon label={labels?.[0]} src={icons?.[0]} />
+        <PressableAppIcon label={labels?.[1]} src={icons?.[1]} />
       </div>
       <div className="flex gap-[31px]">
-        <AppIcon label={labels?.[2]} src={icons?.[2]} />
-        <AppIcon label={labels?.[3]} src={icons?.[3]} />
+        <PressableAppIcon label={labels?.[2]} src={icons?.[2]} />
+        <PressableAppIcon label={labels?.[3]} src={icons?.[3]} />
       </div>
     </div>
   )
