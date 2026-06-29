@@ -535,7 +535,7 @@ export default function App() {
                   willChange: 'transform',
                 }}
               >
-              <FloatInGroup startDelay={100} resetKey={current} step={0.12}>
+              <FloatInGroup startDelay={100} resetKey={current} step={0.2}>
               {/* Left column */}
               <div
                 className="flex flex-col"
@@ -564,7 +564,7 @@ export default function App() {
                 </FloatInItem>
 
                 {/* B3 — left */}
-                <FloatInItem index={2} kind="card" data-diary-entry-id="06-30" className="flex flex-col gap-3" style={{
+                <FloatInItem index={1} kind="card" data-diary-entry-id="06-30" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -586,7 +586,7 @@ export default function App() {
                 </FloatInItem>
 
                 {/* B5 — left */}
-                <FloatInItem index={4} kind="card" data-diary-entry-id="06-28" className="flex flex-col gap-3" style={{
+                <FloatInItem index={2} kind="card" data-diary-entry-id="06-28" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -619,7 +619,7 @@ export default function App() {
                 }}
               >
                 {/* B1 — right */}
-                <FloatInItem index={1} kind="card" data-diary-entry-id="07-01" className="flex flex-col gap-3" style={{
+                <FloatInItem index={0} kind="card" data-diary-entry-id="07-01" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -641,7 +641,7 @@ export default function App() {
                 </FloatInItem>
 
                 {/* B2 — right */}
-                <FloatInItem index={3} kind="card" data-diary-entry-id="06-29" className="flex flex-col gap-3" style={{
+                <FloatInItem index={1} kind="card" data-diary-entry-id="06-29" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
@@ -663,7 +663,7 @@ export default function App() {
                 </FloatInItem>
 
                 {/* B4 — right */}
-                <FloatInItem index={5} kind="card" data-diary-entry-id="06-27" className="flex flex-col gap-3" style={{
+                <FloatInItem index={2} kind="card" data-diary-entry-id="06-27" className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',

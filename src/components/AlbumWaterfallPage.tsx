@@ -425,18 +425,22 @@ export default function AlbumWaterfallPage({
             willChange: 'transform',
           }}
         >
-          <FloatInGroup startDelay={100} resetKey={photos.length} step={0.09}>
-            {cards.map(card => (
-              <PolaroidCard
-                key={card.id}
-                color={card.color}
-                src={card.src}
-                left={card.left}
-                top={card.top}
-                rotation={card.rotation}
-                revealIndex={cardRevealOrder.get(card.id) ?? card.id}
-              />
-            ))}
+          <FloatInGroup startDelay={100} resetKey={photos.length} step={0.18}>
+            {cards.map(card => {
+              const visualOrder = cardRevealOrder.get(card.id) ?? card.id
+              const rowRevealIndex = Math.floor(visualOrder / 2)
+              return (
+                <PolaroidCard
+                  key={card.id}
+                  color={card.color}
+                  src={card.src}
+                  left={card.left}
+                  top={card.top}
+                  rotation={card.rotation}
+                  revealIndex={rowRevealIndex}
+                />
+              )
+            })}
           </FloatInGroup>
         </div>
       </div>
