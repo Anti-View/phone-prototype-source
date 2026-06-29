@@ -238,23 +238,28 @@ export default function DiaryDetailSheet({
 
       {/* Sheet viewport — clips overshoot, never exposes bottom */}
       <div className="absolute left-0 right-0 top-[62px] bottom-0 z-[60] overflow-hidden pointer-events-none">
+        {/* Animated sheet wrapper — spring only, no visual styles */}
         <motion.div
-          className="w-full h-full bg-white rounded-t-[38px] flex flex-col overflow-hidden pointer-events-auto"
-          style={{
-            boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
-            fontFamily: 'var(--font-ui)',
-          }}
+          className="absolute left-0 right-0 top-0 h-full pointer-events-auto"
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{
             type: 'spring',
-            stiffness: 300,
-            damping: 32,
-            mass: 1,
+            damping: 28,
+            stiffness: 280,
+            mass: 1.1,
           }}
-        onClick={(e) => e.stopPropagation()}
-      >
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Real visible sheet */}
+          <div
+            className="relative w-full h-full bg-white rounded-t-[38px] flex flex-col overflow-hidden"
+            style={{
+              boxShadow: '0px 15px 75px rgba(0, 0, 0, 0.18)',
+              fontFamily: 'var(--font-ui)',
+            }}
+          >
         {/* ── Top handle + controls ── */}
         <div
           style={{
@@ -526,6 +531,12 @@ export default function DiaryDetailSheet({
             </div>
           </div>
         </div>
+        </div>
+        {/* Bottom bleed: fills gap during spring overshoot */}
+        <div
+          aria-hidden="true"
+          className="absolute left-0 right-0 top-full h-[120px] bg-white"
+        />
       </motion.div>
       </div>
     </>
