@@ -430,8 +430,6 @@ export default function DiaryDetailSheet({
               flex: 1,
               minHeight: 0,
               overflow: 'hidden',
-              marginTop: -24,
-              paddingTop: 24,
             }}
           >
             {/* Top fade mask: player 下方的白色渐变遮罩 */}
@@ -454,7 +452,6 @@ export default function DiaryDetailSheet({
               className="overflow-y-auto overscroll-contain"
               style={{
                 height: '100%',
-                paddingTop: 24,
                 paddingBottom: 0,
                 display: 'flex',
                 flexDirection: 'column',
