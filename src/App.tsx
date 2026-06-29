@@ -10,6 +10,7 @@ import LoadingCard from './components/LoadingCard'
 import ReadySheet from './components/ReadySheet'
 import SuccessToast from './components/SuccessToast'
 import Desktop from './components/Desktop'
+import { publicAsset } from './utils/assets'
 import { useAppState } from './hooks/useAppState'
 
 export default function App() {
@@ -42,7 +43,7 @@ export default function App() {
     if (result) showToast()
   }, [applyAndDismiss, showToast])
 
-  const pageActive = current !== 'desktop'
+  const pageActive = current !== 'desktop' && current !== 'diary'
 
   return (
     <PhoneFrame>
@@ -128,14 +129,153 @@ export default function App() {
         {current === 'diary' && (
           <motion.div
             key="diary-page"
-            className="absolute inset-0 z-10"
+            className="absolute inset-0 z-20"
             initial={{ x: 402 }}
             animate={{ x: 0 }}
             exit={{ x: 402 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
           >
-            <div className="absolute inset-0 bg-white" />
-            <NavBar onHome={goToDesktop} />
+            {/* Solid bg */}
+            <div className="absolute inset-0" style={{ background: '#EEEFF4' }} />
+            {/* Fixed NavBar */}
+            <NavBar onHome={goToDesktop} back />
+            {/* Scrollable waterfall content */}
+            <div className="absolute inset-x-0 overflow-hidden" style={{ top: 130, bottom: 0 }}>
+              <div
+                className="h-full overflow-y-auto overscroll-contain flex justify-center"
+                style={{
+                  gap: 16,
+                  paddingLeft: 16,
+                  paddingRight: 16,
+                  paddingBottom: 40,
+                  touchAction: 'pan-y',
+                  WebkitOverflowScrolling: 'touch',
+                }}
+              >
+              {/* Left column */}
+              <div className="flex flex-col" style={{ width: 177, gap: 24 }}>
+                {/* Card A */}
+                <div className="flex flex-col gap-3" style={{
+                  padding: 24,
+                  background: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                  borderRadius: 40,
+                }}>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>7月2日</span>
+                  </div>
+                  <div className="text-[14px] text-black/50 line-clamp-6" style={{ width: 120, fontFamily: 'PingFang SC, sans-serif' }}>
+                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                  </div>
+                </div>
+
+                {/* B3 — left */}
+                <div className="flex flex-col gap-3" style={{
+                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                  background: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                  borderRadius: 40,
+                  overflow: 'hidden', height: 263, flexShrink: 0,
+                }}>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月30日</span>
+                  </div>
+                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                  </div>
+                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                    <img src={publicAsset('img/diary/image (2).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                  </div>
+                </div>
+
+                {/* B5 — left, no image */}
+                <div className="flex flex-col gap-3" style={{
+                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                  background: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                  borderRadius: 40,
+                  overflow: 'hidden', height: 263, flexShrink: 0,
+                }}>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月28日</span>
+                  </div>
+                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                    确认它没有反抗能力。
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column */}
+              <div className="flex flex-col" style={{ width: 177, gap: 24 }}>
+                {/* B1 — right */}
+                <div className="flex flex-col gap-3" style={{
+                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                  background: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                  borderRadius: 40,
+                  overflow: 'hidden', height: 263, flexShrink: 0,
+                }}>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>7月1日</span>
+                  </div>
+                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。 阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                  </div>
+                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                    <img src={publicAsset('img/diary/image (1).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                  </div>
+                </div>
+
+                {/* B2 — right */}
+                <div className="flex flex-col gap-3" style={{
+                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                  background: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                  borderRadius: 40,
+                  overflow: 'hidden', height: 263, flexShrink: 0,
+                }}>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月29日</span>
+                  </div>
+                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                    上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。
+                  </div>
+                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                    <img src={publicAsset('img/diary/image (3).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                  </div>
+                </div>
+
+                {/* B4 — right */}
+                <div className="flex flex-col gap-3" style={{
+                  paddingTop: 24, paddingLeft: 24, paddingRight: 24,
+                  background: 'rgba(255, 255, 255, 0.40)',
+                  boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
+                  borderRadius: 40,
+                  overflow: 'hidden', height: 263, flexShrink: 0,
+                }}>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
+                    <span className="text-[22px] text-black/90 font-semibold" style={{ fontFamily: 'PingFang SC, sans-serif' }}>6月27日</span>
+                  </div>
+                  <div className="text-[14px] text-black/50 line-clamp-3" style={{ width: 129, fontFamily: 'PingFang SC, sans-serif' }}>
+                    陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。
+                  </div>
+                  <div className="relative" style={{ alignSelf: 'stretch', height: 96 }}>
+                    <img src={publicAsset('img/diary/image (4).png')} alt="" className="absolute left-0 top-0" style={{ width: 129, height: 96, borderTopLeftRadius: 22, borderTopRightRadius: 22 }} draggable={false} />
+                    <div className="absolute left-0" style={{ width: 129, height: 32, top: 64, background: 'linear-gradient(180deg, rgba(238, 239, 244, 0) 0%, #EEEFF4 100%)' }} />
+                  </div>
+                </div>
+              </div>
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -23,7 +23,6 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  touch-action: none;
   overscroll-behavior: none;
 }
 model-viewer,
