@@ -13,6 +13,18 @@ const pastelColors = [
   '#F1E4D4',
 ]
 
+const POLAROID_PREVIEW_LAYOUT_SPRING = {
+  type: 'spring' as const,
+  stiffness: 360,
+  damping: 22,
+  mass: 0.86,
+}
+
+const POLAROID_PREVIEW_BACKDROP_TRANSITION = {
+  duration: 0.22,
+  ease: [0.22, 1, 0.36, 1] as const,
+}
+
 type PreviewCard = {
   id: number
   color: string
@@ -549,7 +561,7 @@ export default function AlbumWaterfallPage({
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.5 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+              transition={POLAROID_PREVIEW_BACKDROP_TRANSITION}
               onClick={() => setPreviewCard(null)}
             />
 
@@ -557,15 +569,11 @@ export default function AlbumWaterfallPage({
               <motion.div
                 layoutId={`polaroid-${previewCard.id}`}
                 transition={{
-                  layout: {
-                    type: 'spring',
-                    stiffness: 260,
-                    damping: 28,
-                    mass: 0.9,
-                  },
+                  layout: POLAROID_PREVIEW_LAYOUT_SPRING,
                 }}
                 style={{
                   pointerEvents: 'auto',
+                  willChange: 'transform',
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
