@@ -514,8 +514,9 @@ export default function Desktop({
   const musicFxUnmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMusicAnimRef = useRef(false)
 
-  const [idleLoopKey, setIdleLoopKey] = useState(0)
-  const [prevIdleLoopKey, setPrevIdleLoopKey] = useState<number | null>(null)
+  type IdleLayer = { id: number; fading: boolean }
+  const [idleLayers, setIdleLayers] = useState<IdleLayer[]>([{ id: 0, fading: false }])
+  const idleLayerIdRef = useRef(0)
   const idleLoopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const idleLoopFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -576,7 +577,7 @@ export default function Desktop({
     clearReturnTimer()
     clearCrossfadeTimer()
     clearIdleLoopTimers()
-    setPrevIdleLoopKey(null)
+    resetIdleLayers()
 
     const from = currentAnimRef.current
 
@@ -618,7 +619,7 @@ export default function Desktop({
     if (!ANIM[name]) return
 
     clearIdleLoopTimers()
-    setPrevIdleLoopKey(null)
+    resetIdleLayers()
 
     pendingAnimRef.current = name
     clearSwitchTimer()
@@ -713,21 +714,24 @@ export default function Desktop({
     }
   }
 
+  const resetIdleLayers = () => {
+    idleLayerIdRef.current += 1
+    setIdleLayers([{ id: idleLayerIdRef.current, fading: false }])
+  }
+
   useEffect(() => {
     clearIdleLoopTimers()
 
     if (charAnim !== DEFAULT_ANIM) {
-      setPrevIdleLoopKey(null)
+      resetIdleLayers()
       return
     }
 
     if (prevCharAnim !== null) {
-      setPrevIdleLoopKey(null)
       return
     }
 
     if (pendingAnimRef.current !== null) {
-      setPrevIdleLoopKey(null)
       return
     }
 
@@ -742,13 +746,19 @@ export default function Desktop({
         return
       }
 
-      setIdleLoopKey(prev => {
-        setPrevIdleLoopKey(prev)
-        return prev + 1
+      setIdleLayers(prev => {
+        const currentActive = prev.find(l => !l.fading) ?? prev[prev.length - 1]
+        const nextId = idleLayerIdRef.current + 1
+        idleLayerIdRef.current = nextId
+
+        return [
+          { ...currentActive, fading: true },
+          { id: nextId, fading: false },
+        ]
       })
 
       idleLoopFadeTimerRef.current = setTimeout(() => {
-        setPrevIdleLoopKey(null)
+        setIdleLayers(prev => prev.filter(l => !l.fading))
         idleLoopFadeTimerRef.current = null
       }, CROSSFADE_MS)
     }, wait)
@@ -756,7 +766,8 @@ export default function Desktop({
     return () => {
       clearIdleLoopTimers()
     }
-  }, [charAnim, prevCharAnim, idleLoopKey])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [charAnim, prevCharAnim, idleLayers])
 
   // cleanup timers on unmount
   useEffect(() => {
@@ -973,31 +984,28 @@ export default function Desktop({
         />
         {/* Crossfade: new animation solid on bottom, old anim fades out on top */}
         <div className="absolute inset-0" style={{ zIndex: 1 }}>
-          <img
-            key={
-              charAnim === DEFAULT_ANIM
-                ? `current-${charAnim}-${idleLoopKey}`
-                : `current-${charAnim}`
-            }
-            src={publicAsset(`videos/${charAnim}.webp`)}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            draggable={false}
-            style={{ zIndex: 1, opacity: 1 }}
-          />
-
-          {/* Idle loop seam crossfade: old idle loop fades out on top */}
-          {charAnim === DEFAULT_ANIM && prevIdleLoopKey !== null && !prevCharAnim && (
-            <motion.img
-              key={`idle-prev-${prevIdleLoopKey}`}
-              src={publicAsset(`videos/${DEFAULT_ANIM}.webp`)}
+          {charAnim === DEFAULT_ANIM ? (
+            idleLayers.map(layer => (
+              <motion.img
+                key={`idle-layer-${layer.id}`}
+                src={publicAsset(`videos/${DEFAULT_ANIM}.webp`)}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                draggable={false}
+                initial={{ opacity: 1 }}
+                animate={{ opacity: layer.fading ? 0 : 1 }}
+                transition={{ duration: CROSSFADE_MS / 1000, ease: 'easeOut' }}
+                style={{ zIndex: layer.fading ? 2 : 1 }}
+              />
+            ))
+          ) : (
+            <img
+              key={`current-${charAnim}`}
+              src={publicAsset(`videos/${charAnim}.webp`)}
               alt=""
               className="absolute inset-0 w-full h-full object-cover"
               draggable={false}
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 0 }}
-              transition={{ duration: CROSSFADE_MS / 1000, ease: 'easeOut' }}
-              style={{ zIndex: 2 }}
+              style={{ zIndex: 1, opacity: 1 }}
             />
           )}
 
