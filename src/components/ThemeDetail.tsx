@@ -1,4 +1,5 @@
 import { useDragScroll } from '../hooks/useDragScroll'
+import { publicAsset } from '../utils/assets'
 
 interface ThemeDetailProps {
   onApply: () => void
@@ -36,8 +37,8 @@ export default function ThemeDetail({ onApply }: ThemeDetailProps) {
         style={{ paddingLeft: 16, paddingRight: 16 }}
       >
         <div className="flex gap-[16px] w-max">
-          <div className="w-[260px] h-[396px] rounded-[32px] bg-gray-100 flex-shrink-0 flex items-center justify-center hover-darken" />
-          <div className="w-[260px] h-[396px] rounded-[32px] bg-gray-100 flex-shrink-0 flex items-center justify-center hover-darken" />
+          <img src={publicAsset('img/主题详情页1.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
+          <img src={publicAsset('img/主题详情页2.png')} alt="" className="w-[228px] h-[396px] rounded-[32px] flex-shrink-0 object-cover hover-darken" draggable={false} />
         </div>
       </div>
 
