@@ -12,6 +12,8 @@ import SuccessToast from './components/SuccessToast'
 import Desktop from './components/Desktop'
 import { publicAsset } from './utils/assets'
 import { useAppState } from './hooks/useAppState'
+import DiaryDetailSheet from './components/DiaryDetailSheet'
+import type { DiaryEntry } from './types/diary'
 
 export default function App() {
   const {
@@ -37,6 +39,78 @@ export default function App() {
     setToastVisible(true)
     setTimeout(() => setToastVisible(false), 2500)
   }, [])
+
+  // ── Diary entries mock data ──
+  const diaryEntries: Record<string, DiaryEntry> = {
+    '07-02': {
+      id: '07-02',
+      date: '7月2日',
+      time: '18:56',
+      preview: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。',
+      fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。\n\n阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。\n\n梦里我抓到了一只比拖鞋还大的飞蛾。醒来后发现那其实是窗帘的影子，我有六秒觉得自己被命运戏弄了。',
+      tags: ['毛线球', '阳光', '沙发', '沉睡'],
+      linkCount: 1,
+      imageCount: 0,
+    },
+    '06-30': {
+      id: '06-30',
+      date: '6月30日',
+      time: '18:56',
+      preview: '上午把客厅里那个会滚动的毛线球抓了十五遍。',
+      fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。\n\n阳光移到了沙发左侧，这是全屋最完美的温度。我把自己盘成一个完美的圆圈，陷入沉睡。\n\n梦里我抓到了一只比拖鞋还大的飞蛾。它翅膀上的粉末在月光下闪烁着诡异的蓝光，我追了它整整三个街区，最后它停在了一盏坏掉的路灯上。',
+      tags: ['毛线球', '阳光', '飞蛾'],
+      linkCount: 0,
+      imageCount: 1,
+      images: ['img/diary/image (2).png'],
+    },
+    '06-29': {
+      id: '06-29',
+      date: '6月29日',
+      time: '18:56',
+      preview: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。',
+      fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。\n\n今天在窗台上发现了一只迷路的瓢虫。它沿着窗框爬了七圈，最终选择了左边的方向。我不知道左边有什么，但希望那是它想要去的地方。',
+      tags: ['毛线球', '瓢虫', '窗台'],
+      linkCount: 0,
+      imageCount: 1,
+      images: ['img/diary/image (3).png'],
+    },
+    '06-28': {
+      id: '06-28',
+      date: '6月28日',
+      time: '18:56',
+      preview: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。',
+      fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。阳光移到了沙发左侧，这是全屋最完美的温度。\n\n下午三点，一只鸽子停在了空调外机上。它歪着头看了我很久，然后飞走了。我忽然意识到，在它的眼中，我才是那个被关在玻璃后面的生物。\n\n晚上翻到了去年冬天的照片，那时候窗台上还有积雪。时间过得比毛线球滚得还快。',
+      tags: ['毛线球', '阳光', '沙发', '鸽子'],
+      linkCount: 1,
+      imageCount: 1,
+      images: ['img/diary/image (4).png'],
+    },
+    '06-27': {
+      id: '06-27',
+      date: '6月27日',
+      time: '18:56',
+      preview: '陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。',
+      fullText: '陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。\n\n它的翅膀是半透明的琥珀色，每一次扇动都会落下细碎的金粉。我伸手去够，却怎么也够不着——它在嘲笑我，用那种只有猫才能听懂的频率。\n\n醒来时嘴角还挂着笑，窗帘的影子正好落在枕头旁边，形状像一只飞蛾。',
+      tags: ['飞蛾', '梦', '窗帘'],
+      linkCount: 2,
+      imageCount: 1,
+      images: ['img/diary/image (4).png'],
+    },
+    '07-01': {
+      id: '07-01',
+      date: '7月1日',
+      time: '18:56',
+      preview: '上午把客厅里那个会滚动的毛线球抓了十五遍。',
+      fullText: '上午把客厅里那个会滚动的毛线球抓了十五遍，确认它没有反抗能力。阳光移到了沙发左侧，这是全屋最完美的温度。\n\n我把自己盘成一个完美的圆圈，陷入沉睡。梦里我抓到了一只比拖鞋还大的飞蛾。\n\n新的一月开始了，我决定做一只更勇敢的猫。起码在梦里面，我已经征服了全世界。',
+      tags: ['毛线球', '阳光', '沙发', '沉睡', '新月'],
+      linkCount: 1,
+      imageCount: 1,
+      images: ['img/diary/image (1).png'],
+    },
+  }
+
+  const [selectedDiaryEntry, setSelectedDiaryEntry] = useState<DiaryEntry | null>(null)
+  const diaryClickGuardRef = useRef(false)
 
   const handleApply = useCallback(async () => {
     const result = await applyAndDismiss()
@@ -157,6 +231,8 @@ export default function App() {
     cancelDiaryMomentum()
     setDiaryRubberOffset(0)
 
+    diaryClickGuardRef.current = false
+
     diaryDragRef.current = {
       active: true,
       pointerId: e.pointerId,
@@ -188,6 +264,10 @@ export default function App() {
     state.lastTime = now
 
     const totalDeltaY = e.clientY - state.startY
+    if (Math.abs(totalDeltaY) > 6) {
+      diaryClickGuardRef.current = true
+    }
+
     const rawScrollTop = state.startScrollTop - totalDeltaY
     const maxScroll = getMaxScroll(el)
 
@@ -220,6 +300,12 @@ export default function App() {
 
     resetDiaryRubberOffset()
 
+    if (diaryClickGuardRef.current) {
+      window.setTimeout(() => {
+        diaryClickGuardRef.current = false
+      }, 0)
+    }
+
     const releaseVelocity = state.velocity
 
     if (Math.abs(releaseVelocity) > 0.08) {
@@ -232,6 +318,13 @@ export default function App() {
       cancelDiaryMomentum()
     }
   }, [cancelDiaryMomentum])
+
+  const openDiaryDetail = useCallback((entry: DiaryEntry) => {
+    if (diaryClickGuardRef.current) return
+    cancelDiaryMomentum()
+    setDiaryRubberOffset(0)
+    setSelectedDiaryEntry(entry)
+  }, [cancelDiaryMomentum, setDiaryRubberOffset])
 
   const pageActive = current !== 'desktop' && current !== 'diary'
 
@@ -367,11 +460,12 @@ export default function App() {
                 }}
               >
                 {/* Card A */}
-                <div className="flex flex-col gap-3" style={{
+                <div onClick={() => openDiaryDetail(diaryEntries['07-02'])} className="flex flex-col gap-3" style={{
                   padding: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
                   borderRadius: 40,
+                  cursor: 'pointer',
                 }}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
@@ -383,12 +477,13 @@ export default function App() {
                 </div>
 
                 {/* B3 — left */}
-                <div className="flex flex-col gap-3" style={{
+                <div onClick={() => openDiaryDetail(diaryEntries['06-30'])} className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
                   borderRadius: 40,
                   overflow: 'hidden', height: 263, flexShrink: 0,
+                  cursor: 'pointer',
                 }}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
@@ -404,12 +499,13 @@ export default function App() {
                 </div>
 
                 {/* B5 — left */}
-                <div className="flex flex-col gap-3" style={{
+                <div onClick={() => openDiaryDetail(diaryEntries['06-28'])} className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
                   borderRadius: 40,
                   overflow: 'hidden', height: 263, flexShrink: 0,
+                  cursor: 'pointer',
                 }}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
@@ -436,12 +532,13 @@ export default function App() {
                 }}
               >
                 {/* B1 — right */}
-                <div className="flex flex-col gap-3" style={{
+                <div onClick={() => openDiaryDetail(diaryEntries['07-01'])} className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
                   borderRadius: 40,
                   overflow: 'hidden', height: 263, flexShrink: 0,
+                  cursor: 'pointer',
                 }}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
@@ -457,12 +554,13 @@ export default function App() {
                 </div>
 
                 {/* B2 — right */}
-                <div className="flex flex-col gap-3" style={{
+                <div onClick={() => openDiaryDetail(diaryEntries['06-29'])} className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
                   borderRadius: 40,
                   overflow: 'hidden', height: 263, flexShrink: 0,
+                  cursor: 'pointer',
                 }}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
@@ -478,12 +576,13 @@ export default function App() {
                 </div>
 
                 {/* B4 — right */}
-                <div className="flex flex-col gap-3" style={{
+                <div onClick={() => openDiaryDetail(diaryEntries['06-27'])} className="flex flex-col gap-3" style={{
                   paddingTop: 24, paddingLeft: 24, paddingRight: 24,
                   background: 'rgba(255, 255, 255, 0.40)',
                   boxShadow: '0px 2px 1px rgba(211.66, 215.20, 232.93, 0.50) inset, 0px -2px 1px rgba(255, 255, 255, 0.85) inset',
                   borderRadius: 40,
                   overflow: 'hidden', height: 263, flexShrink: 0,
+                  cursor: 'pointer',
                 }}>
                   <div className="flex flex-col gap-1">
                     <span className="text-[14px] text-black/50" style={{ fontFamily: 'PingFang SC, sans-serif' }}>18:56</span>
@@ -500,6 +599,17 @@ export default function App() {
               </div>
               </div>
             </div>
+
+            {/* ── Diary detail sheet ── */}
+            <AnimatePresence>
+              {selectedDiaryEntry && (
+                <DiaryDetailSheet
+                  key="diary-detail-sheet"
+                  entry={selectedDiaryEntry}
+                  onClose={() => setSelectedDiaryEntry(null)}
+                />
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
