@@ -438,11 +438,11 @@ export default function Desktop({
 
   /* ── Character animation state (durations from actual WebP files in public/videos/) ── */
   const ANIM: Record<string, number> = {
-    '待机': 3234,    // 97f × 33ms (30fps) — read from file
-    '吹气': 3234,    // 97f × 33ms (30fps) — read from file
-    '点击': 3234,    // 97f × 33ms (30fps) — assumed same as 待机
-    '听音乐': 3234,   // 97f × 33ms (30fps) — assumed same as 待机
-    '写日记': 3234,   // 97f × 33ms (30fps) — assumed same as 待机
+    '待机': 3993,    // 121f × 33ms (30fps) — read from file
+    '吹气': 3234,    //  97f × 33ms (30fps) — read from file
+    '点击': 3234,    //  97f × 33ms (30fps) — read from file
+    '听音乐': 3993,   // 121f × 33ms (30fps) — read from file
+    '写日记': 6369,   // 193f × 33ms (30fps) — read from file
   }
   const DEFAULT_ANIM = '待机'
   const [charAnim, setCharAnim] = useState(DEFAULT_ANIM)
