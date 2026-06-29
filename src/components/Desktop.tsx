@@ -222,17 +222,21 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
           <div className="absolute inset-0 bg-black z-10" />
         )}
         {/* Pet sticker — appears after viewfinder animation ends */}
-        <motion.img
-          ref={gifRef}
-          src={publicAsset('videos/待机.gif')}
-          alt=""
+        <motion.div
           className="absolute"
           style={{ top: 40, right: 80, width: 178, height: 178, rotate: '15deg' }}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.52, type: 'spring', stiffness: 120, damping: 12, mass: 1.2 }}
-          draggable={false}
-        />
+        >
+          <img
+            ref={gifRef}
+            src={publicAsset('videos/待机.gif')}
+            alt=""
+            className="w-full h-full"
+            draggable={false}
+          />
+        </motion.div>
       </motion.div>
 
       {/* Button row */}
