@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, type PointerEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PhoneFrame from './components/PhoneFrame'
 import StatusBar from './components/StatusBar'
@@ -42,6 +42,64 @@ export default function App() {
     const result = await applyAndDismiss()
     if (result) showToast()
   }, [applyAndDismiss, showToast])
+
+  const diaryScrollRef = useRef<HTMLDivElement | null>(null)
+
+  const diaryDragRef = useRef({
+    active: false,
+    pointerId: -1,
+    startY: 0,
+    startScrollTop: 0,
+  })
+
+  const handleDiaryPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return
+    if (e.button !== 0) return
+
+    const target = e.target as HTMLElement
+    if (target.closest('button, a, input, textarea, select, [role="button"]')) return
+
+    const el = diaryScrollRef.current
+    if (!el) return
+    if (el.scrollHeight <= el.clientHeight) return
+
+    diaryDragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startY: e.clientY,
+      startScrollTop: el.scrollTop,
+    }
+
+    el.setPointerCapture(e.pointerId)
+  }, [])
+
+  const handleDiaryPointerMove = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const state = diaryDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = diaryScrollRef.current
+    if (!el) return
+
+    const deltaY = e.clientY - state.startY
+    el.scrollTop = state.startScrollTop - deltaY
+
+    e.preventDefault()
+  }, [])
+
+  const stopDiaryDrag = useCallback((e: PointerEvent<HTMLDivElement>) => {
+    const state = diaryDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = diaryScrollRef.current
+    if (el?.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
+    }
+
+    diaryDragRef.current.active = false
+    diaryDragRef.current.pointerId = -1
+  }, [])
 
   const pageActive = current !== 'desktop' && current !== 'diary'
 
@@ -138,9 +196,10 @@ export default function App() {
             {/* Solid bg */}
             <div className="absolute inset-0" style={{ background: '#EEEFF4' }} />
             {/* Fixed NavBar */}
-            <NavBar onHome={goToDesktop} back />
+            <NavBar onHome={goToDesktop} />
             {/* Scrollable waterfall content */}
             <div
+              ref={diaryScrollRef}
               className="absolute inset-x-0 overflow-y-auto overflow-x-hidden overscroll-contain"
               style={{
                 top: 130,
@@ -148,6 +207,11 @@ export default function App() {
                 touchAction: 'pan-y',
                 WebkitOverflowScrolling: 'touch',
               }}
+              onPointerDown={handleDiaryPointerDown}
+              onPointerMove={handleDiaryPointerMove}
+              onPointerUp={stopDiaryDrag}
+              onPointerCancel={stopDiaryDrag}
+              onLostPointerCapture={stopDiaryDrag}
             >
               <div
                 className="flex justify-center items-start"
