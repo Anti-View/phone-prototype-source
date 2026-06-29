@@ -514,6 +514,11 @@ export default function Desktop({
   const musicFxUnmountTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wasMusicAnimRef = useRef(false)
 
+  const [idleLoopKey, setIdleLoopKey] = useState(0)
+  const [prevIdleLoopKey, setPrevIdleLoopKey] = useState<number | null>(null)
+  const idleLoopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const idleLoopFadeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const clearSwitchTimer = () => {
     if (switchTimerRef.current) {
       clearTimeout(switchTimerRef.current)
@@ -570,6 +575,8 @@ export default function Desktop({
     clearSwitchTimer()
     clearReturnTimer()
     clearCrossfadeTimer()
+    clearIdleLoopTimers()
+    setPrevIdleLoopKey(null)
 
     const from = currentAnimRef.current
 
@@ -609,6 +616,9 @@ export default function Desktop({
 
   const playAnim = useCallback((name: string) => {
     if (!ANIM[name]) return
+
+    clearIdleLoopTimers()
+    setPrevIdleLoopKey(null)
 
     pendingAnimRef.current = name
     clearSwitchTimer()
@@ -691,6 +701,63 @@ export default function Desktop({
     wasMusicAnimRef.current = isMusicAnim
   }, [charAnim])
 
+  /* ── Idle loop helpers — smooth WebP loop seam ── */
+  const clearIdleLoopTimers = () => {
+    if (idleLoopTimerRef.current) {
+      clearTimeout(idleLoopTimerRef.current)
+      idleLoopTimerRef.current = null
+    }
+    if (idleLoopFadeTimerRef.current) {
+      clearTimeout(idleLoopFadeTimerRef.current)
+      idleLoopFadeTimerRef.current = null
+    }
+  }
+
+  useEffect(() => {
+    clearIdleLoopTimers()
+
+    if (charAnim !== DEFAULT_ANIM) {
+      setPrevIdleLoopKey(null)
+      return
+    }
+
+    if (prevCharAnim !== null) {
+      setPrevIdleLoopKey(null)
+      return
+    }
+
+    if (pendingAnimRef.current !== null) {
+      setPrevIdleLoopKey(null)
+      return
+    }
+
+    const idleDuration = ANIM[DEFAULT_ANIM].duration
+    const wait = Math.max(0, idleDuration - CROSSFADE_MS)
+
+    idleLoopTimerRef.current = setTimeout(() => {
+      if (
+        currentAnimRef.current !== DEFAULT_ANIM ||
+        pendingAnimRef.current !== null
+      ) {
+        return
+      }
+
+      setIdleLoopKey(prev => {
+        setPrevIdleLoopKey(prev)
+        return prev + 1
+      })
+
+      idleLoopFadeTimerRef.current = setTimeout(() => {
+        setPrevIdleLoopKey(null)
+        idleLoopFadeTimerRef.current = null
+      }, CROSSFADE_MS)
+    }, wait)
+
+    return () => {
+      clearIdleLoopTimers()
+    }
+  }, [charAnim, prevCharAnim, idleLoopKey])
+
   // cleanup timers on unmount
   useEffect(() => {
     return () => {
@@ -698,6 +765,7 @@ export default function Desktop({
       clearReturnTimer()
       clearCrossfadeTimer()
       clearMusicFxTimers()
+      clearIdleLoopTimers()
     }
   }, [])
 
@@ -906,7 +974,11 @@ export default function Desktop({
         {/* Crossfade: new animation solid on bottom, old anim fades out on top */}
         <div className="absolute inset-0" style={{ zIndex: 1 }}>
           <img
-            key={`current-${charAnim}`}
+            key={
+              charAnim === DEFAULT_ANIM
+                ? `current-${charAnim}-${idleLoopKey}`
+                : `current-${charAnim}`
+            }
             src={publicAsset(`videos/${charAnim}.webp`)}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
@@ -914,6 +986,22 @@ export default function Desktop({
             style={{ zIndex: 1, opacity: 1 }}
           />
 
+          {/* Idle loop seam crossfade: old idle loop fades out on top */}
+          {charAnim === DEFAULT_ANIM && prevIdleLoopKey !== null && !prevCharAnim && (
+            <motion.img
+              key={`idle-prev-${prevIdleLoopKey}`}
+              src={publicAsset(`videos/${DEFAULT_ANIM}.webp`)}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              draggable={false}
+              initial={{ opacity: 1 }}
+              animate={{ opacity: 0 }}
+              transition={{ duration: CROSSFADE_MS / 1000, ease: 'easeOut' }}
+              style={{ zIndex: 2 }}
+            />
+          )}
+
+          {/* Action switch crossfade: old animation fades out on top */}
           {prevCharAnim && (
             <motion.img
               key={`prev-${prevCharAnim}`}
