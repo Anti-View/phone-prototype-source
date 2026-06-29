@@ -161,41 +161,66 @@ function CameraIsland({ onCapture }: { onCapture: (dataURL: string) => void }) {
 
   const shutter = () => {
     if (flash) return
-    // Capture frame before flash
     const video = videoRef.current
     if (video && video.videoWidth) {
-      const canvas = document.createElement('canvas')
-      canvas.width = video.videoWidth
-      canvas.height = video.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.translate(canvas.width, 0)
-        ctx.scale(-1, 1)
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
-        // Center-crop to 1:1 square
-        const size = Math.min(canvas.width, canvas.height)
-        const ox = 0
-        const oy = (canvas.height - size) / 2
-        const square = document.createElement('canvas')
-        square.width = size
-        square.height = size
-        square.getContext('2d')!.drawImage(canvas, ox, oy, size, size, 0, 0, size, size)
-        // Overlay GIF sticker with rotation (matches CSS: rotate 15deg, scale 178/220)
-        const gif = gifRef.current
-        if (gif) {
-          const gifW = (178 / 220) * size
-          const gifH = gifW
-          const gifCX = size - (80 / 220) * size - gifW / 2
-          const gifCY = (40 / 164) * size + gifH / 2
-          const gCtx = square.getContext('2d')!
-          gCtx.save()
-          gCtx.translate(gifCX, gifCY)
-          gCtx.rotate((15 * Math.PI) / 180)
-          gCtx.drawImage(gif, -gifW / 2, -gifH / 2, gifW, gifH)
-          gCtx.restore()
-        }
-        onCapture(square.toDataURL('image/jpeg', 0.9))
+      const VW = video.videoWidth
+      const VH = video.videoHeight
+
+      // Render at viewfinder scale (4x for quality)
+      const S = 4
+      const VP_W = 220 * S
+      const VP_H = 164 * S
+
+      // Step 1: Mirrored video canvas
+      const mirror = document.createElement('canvas')
+      mirror.width = VW
+      mirror.height = VH
+      const mCtx = mirror.getContext('2d')!
+      mCtx.translate(VW, 0)
+      mCtx.scale(-1, 1)
+      mCtx.drawImage(video, 0, 0, VW, VH)
+
+      // Step 2: Viewfinder canvas — draw mirrored video with object-cover
+      const vp = document.createElement('canvas')
+      vp.width = VP_W
+      vp.height = VP_H
+      const vpCtx = vp.getContext('2d')!
+      const videoAspect = VW / VH
+      const vpAspect = VP_W / VP_H
+      if (videoAspect > vpAspect) {
+        // Video wider — match height, crop sides
+        const dw = VP_H * videoAspect
+        vpCtx.drawImage(mirror, 0, 0, VW, VH, (VP_W - dw) / 2, 0, dw, VP_H)
+      } else {
+        // Video taller — match width, crop top/bottom
+        const dh = VP_W / videoAspect
+        vpCtx.drawImage(mirror, 0, 0, VW, VH, 0, (VP_H - dh) / 2, VP_W, dh)
       }
+
+      // Step 3: Draw GIF at exact CSS position (scaled by S)
+      const gif = gifRef.current
+      if (gif) {
+        const gL = VP_W - 80 * S - 178 * S  // left edge
+        const gT = 40 * S
+        const gW = 178 * S
+        const gH = 178 * S
+        const gCX = gL + gW / 2
+        const gCY = gT + gH / 2
+        vpCtx.save()
+        vpCtx.translate(gCX, gCY)
+        vpCtx.rotate((15 * Math.PI) / 180)
+        vpCtx.drawImage(gif, -gW / 2, -gH / 2, gW, gH)
+        vpCtx.restore()
+      }
+
+      // Step 4: Crop left 1:1 square
+      const sqSize = Math.min(VP_W, VP_H)
+      const square = document.createElement('canvas')
+      square.width = sqSize
+      square.height = sqSize
+      square.getContext('2d')!.drawImage(vp, 0, 0, sqSize, sqSize, 0, 0, sqSize, sqSize)
+
+      onCapture(square.toDataURL('image/jpeg', 0.9))
     }
     // Flash animation
     setFlash(true)
