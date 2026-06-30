@@ -155,6 +155,7 @@ export default function App() {
   const [toastVisible, setToastVisible] = useState(false)
   const [toastKey, setToastKey] = useState(0)
   const [albumPhotos, setAlbumPhotos] = useState<string[]>([])
+  const [collectionGalleryOpen, setCollectionGalleryOpen] = useState(false)
 
   const handleAlbumCapture = useCallback((dataURL: string) => {
     setAlbumPhotos(prev => [dataURL, ...prev].slice(0, 10))
@@ -181,6 +182,14 @@ export default function App() {
     setToastKey(k => k + 1)
     setToastVisible(true)
     setTimeout(() => setToastVisible(false), 2500)
+  }, [])
+
+  const openCollectionGallery = useCallback(() => {
+    setCollectionGalleryOpen(true)
+  }, [])
+
+  const closeCollectionGallery = useCallback(() => {
+    setCollectionGalleryOpen(false)
   }, [])
 
   const [selectedDiaryEntry, setSelectedDiaryEntry] = useState<DiaryEntry | null>(null)
@@ -792,8 +801,25 @@ export default function App() {
             exit={{ x: 402 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28, mass: 1 }}
           >
-            <CollectionWaterfallPage onBack={goToDesktop} />
+            <CollectionWaterfallPage
+              onBack={goToDesktop}
+              onOpenGallery={openCollectionGallery}
+            />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Collection gallery overlay ── */}
+      <AnimatePresence>
+        {collectionGalleryOpen && (
+          <GalleryPage
+            key="collection-gallery-page"
+            state="gallery"
+            onSelect={() => {
+              // TODO: Collection 选图后的下一步稍后再做
+            }}
+            onCancel={closeCollectionGallery}
+          />
         )}
       </AnimatePresence>
 

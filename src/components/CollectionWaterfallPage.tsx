@@ -30,8 +30,10 @@ const DISPLAY_CASES = [
 
 function CreateShowcaseSheet({
   onClose,
+  onOpenGallery,
 }: {
   onClose: () => void
+  onOpenGallery: () => void
 }) {
   const CASE_PAGE_WIDTH = 338
   const CASE_IMAGE_SIZE = 322
@@ -40,6 +42,7 @@ function CreateShowcaseSheet({
   const CASE_COUNT = DISPLAY_CASES.length
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0)
   const showcaseTrackX = useMotionValue(0)
+  const [showcaseApplied, setShowcaseApplied] = useState(false)
 
   const snapToShowcaseCase = useCallback((index: number) => {
     const target = Math.max(0, Math.min(CASE_COUNT - 1, index))
@@ -77,6 +80,16 @@ function CreateShowcaseSheet({
     },
     [selectedCaseIndex, snapToShowcaseCase],
   )
+
+  const handlePrimaryAction = useCallback(() => {
+    if (!showcaseApplied) {
+      snapToShowcaseCase(selectedCaseIndex)
+      setShowcaseApplied(true)
+      return
+    }
+
+    onOpenGallery()
+  }, [showcaseApplied, selectedCaseIndex, snapToShowcaseCase, onOpenGallery])
 
   return (
     <>
@@ -238,16 +251,27 @@ function CreateShowcaseSheet({
                     textAlign: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      color: 'black',
-                      fontSize: 22,
-                      fontFamily: PINGFANG,
-                      fontWeight: 600,
-                    }}
-                  >
-                    选择展柜
-                  </div>
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                      key={showcaseApplied ? 'place-first-item-title' : 'choose-case-title'}
+                      initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
+                      transition={{
+                        y: { type: 'spring', stiffness: 120, damping: 22, mass: 1 },
+                        opacity: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
+                        filter: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
+                      }}
+                      style={{
+                        color: 'black',
+                        fontSize: 22,
+                        fontFamily: PINGFANG,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {showcaseApplied ? '放置你的首件物品' : '选择展柜'}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </FloatInItem>
 
@@ -258,11 +282,11 @@ function CreateShowcaseSheet({
                     width: CASE_PAGE_WIDTH,
                     overflow: 'visible',
                     touchAction: 'pan-x',
-                    cursor: 'grab',
+                    cursor: showcaseApplied ? 'default' : 'grab',
                   }}
                 >
                   <motion.div
-                    drag="x"
+                    drag={showcaseApplied ? false : 'x'}
                     dragConstraints={{
                       left: -(CASE_COUNT - 1) * CASE_STEP,
                       right: 0,
@@ -292,18 +316,31 @@ function CreateShowcaseSheet({
                           flexShrink: 0,
                         }}
                       >
-                        <div
-                          style={{
-                            alignSelf: 'stretch',
-                            color: 'rgba(0, 0, 0, 0.50)',
-                            fontSize: 15,
-                            fontFamily: PINGFANG,
-                            fontWeight: 400,
-                            lineHeight: '22px',
-                          }}
-                        >
-                          {item.description}
-                        </div>
+                        <AnimatePresence mode="wait" initial={false}>
+                          <motion.div
+                            key={showcaseApplied ? 'upload-item-copy' : item.description}
+                            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
+                            transition={{
+                              y: { type: 'spring', stiffness: 110, damping: 22, mass: 1.05 },
+                              opacity: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                              filter: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+                            }}
+                            style={{
+                              alignSelf: 'stretch',
+                              color: 'rgba(0, 0, 0, 0.50)',
+                              fontSize: 15,
+                              fontFamily: PINGFANG,
+                              fontWeight: 400,
+                              lineHeight: '22px',
+                            }}
+                          >
+                            {showcaseApplied
+                              ? '上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。'
+                              : item.description}
+                          </motion.div>
+                        </AnimatePresence>
 
                         <img
                           src={publicAsset(item.image)}
@@ -354,9 +391,7 @@ function CreateShowcaseSheet({
             <FloatInItem index={4} kind="item">
               <button
                 type="button"
-                onClick={() => {
-                  // TODO: 下一步流程稍后再做
-                }}
+                onClick={handlePrimaryAction}
                 className="active:scale-[0.98] transition-transform"
                 style={{
                   width: 370,
@@ -386,20 +421,31 @@ function CreateShowcaseSheet({
                     alignItems: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      textAlign: 'center',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      color: 'white',
-                      fontSize: 17,
-                      fontFamily: PINGFANG,
-                      fontWeight: 500,
-                    }}
-                  >
-                    确定
-                  </div>
+                  <AnimatePresence mode="wait" initial={false}>
+                    <motion.div
+                      key={showcaseApplied ? 'upload-image-label' : 'confirm-label'}
+                      initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+                      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                      exit={{ opacity: 0, y: -10, filter: 'blur(4px)' }}
+                      transition={{
+                        y: { type: 'spring', stiffness: 140, damping: 22, mass: 0.9 },
+                        opacity: { duration: 0.24, ease: [0.22, 1, 0.36, 1] },
+                        filter: { duration: 0.24, ease: [0.22, 1, 0.36, 1] },
+                      }}
+                      style={{
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontSize: 17,
+                        fontFamily: PINGFANG,
+                        fontWeight: 500,
+                      }}
+                    >
+                      {showcaseApplied ? '上传图片' : '确定'}
+                    </motion.div>
+                  </AnimatePresence>
                 </div>
               </button>
             </FloatInItem>
@@ -412,8 +458,10 @@ function CreateShowcaseSheet({
 
 export default function CollectionWaterfallPage({
   onBack,
+  onOpenGallery,
 }: {
   onBack: () => void
+  onOpenGallery: () => void
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
@@ -1228,6 +1276,7 @@ export default function CollectionWaterfallPage({
           <CreateShowcaseSheet
             key="create-showcase-sheet"
             onClose={() => setCreateSheetOpen(false)}
+            onOpenGallery={onOpenGallery}
           />
         )}
       </AnimatePresence>
