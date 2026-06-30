@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import TouchCursor from './TouchCursor'
+import { publicAsset } from '../utils/assets'
 
 const PHONE_WIDTH = 402
 const PHONE_HEIGHT = 874
@@ -55,7 +56,6 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
 
   const content = (
     <div
-      className="bg-black"
       style={{
         width: '100vw',
         height: '100dvh',
@@ -65,6 +65,7 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
         alignItems: 'center',
         justifyContent: 'center',
         overscrollBehavior: 'none',
+        background: '#D8E2FF',
       }}
     >
       <div
@@ -75,6 +76,23 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
           flexShrink: 0,
         }}
       >
+        <img
+          src={publicAsset('bg.jpg')}
+          alt=""
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: PHONE_WIDTH * scale,
+            height: PHONE_HEIGHT * scale,
+            objectFit: 'cover',
+            display: 'block',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+          draggable={false}
+        />
+
         <div
           className="rounded-[64px] overflow-hidden bg-white relative"
           style={{
@@ -82,6 +100,8 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
             height: PHONE_HEIGHT,
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           {children}
