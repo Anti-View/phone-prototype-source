@@ -33,28 +33,30 @@ function CreateShowcaseSheet({
 }: {
   onClose: () => void
 }) {
-  const CASE_WIDTH = 322
+  const CASE_PAGE_WIDTH = 338
+  const CASE_IMAGE_SIZE = 322
+  const CASE_PAGE_GAP = 64
+  const CASE_STEP = CASE_PAGE_WIDTH + CASE_PAGE_GAP
   const CASE_COUNT = DISPLAY_CASES.length
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0)
-  const carouselX = useMotionValue(0)
-  const selectedCase = DISPLAY_CASES[selectedCaseIndex]
+  const showcaseTrackX = useMotionValue(0)
 
-  const snapToCase = useCallback((index: number) => {
+  const snapToShowcaseCase = useCallback((index: number) => {
     const target = Math.max(0, Math.min(CASE_COUNT - 1, index))
 
     setSelectedCaseIndex(target)
 
-    animate(carouselX, -target * CASE_WIDTH, {
+    animate(showcaseTrackX, -target * CASE_STEP, {
       type: 'spring',
       stiffness: 300,
       damping: 28,
       mass: 1,
     })
-  }, [carouselX])
+  }, [showcaseTrackX])
 
-  const handleCarouselDragEnd = useCallback(
+  const handleShowcaseTrackDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-      const threshold = 48
+      const threshold = 50
       const velocityThreshold = 450
 
       let target = selectedCaseIndex
@@ -71,9 +73,9 @@ function CreateShowcaseSheet({
         target = selectedCaseIndex - 1
       }
 
-      snapToCase(target)
+      snapToShowcaseCase(target)
     },
-    [selectedCaseIndex, snapToCase],
+    [selectedCaseIndex, snapToShowcaseCase],
   )
 
   return (
@@ -220,47 +222,40 @@ function CreateShowcaseSheet({
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 gap: 24,
               }}
             >
               {/* Title */}
-              <FloatInItem index={1} kind="item">
-                <div
-                  style={{
-                    color: 'black',
-                    fontSize: 22,
-                    fontFamily: PINGFANG,
-                    fontWeight: 600,
-                  }}
-                >
-                  选择展柜
-                </div>
-              </FloatInItem>
-
-              {/* Description — changes with selected case */}
-              <FloatInItem index={2} kind="item" style={{ alignSelf: 'stretch' }}>
+              <FloatInItem index={1} kind="item" style={{ alignSelf: 'stretch' }}>
                 <div
                   style={{
                     alignSelf: 'stretch',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 15,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
-                    lineHeight: '22px',
+                    display: 'inline-flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 10,
                   }}
                 >
-                  {selectedCase.description}
+                  <div
+                    style={{
+                      color: 'black',
+                      fontSize: 22,
+                      fontFamily: PINGFANG,
+                      fontWeight: 600,
+                    }}
+                  >
+                    选择展柜
+                  </div>
                 </div>
               </FloatInItem>
 
-              {/* Carousel */}
-              <FloatInItem index={3} kind="image">
+              {/* Horizontal track — each page = description + image */}
+              <FloatInItem index={2} kind="item">
                 <div
                   style={{
-                    width: CASE_WIDTH,
-                    height: CASE_WIDTH,
-                    overflow: 'hidden',
+                    width: CASE_PAGE_WIDTH,
+                    overflow: 'visible',
                     touchAction: 'pan-x',
                     cursor: 'grab',
                   }}
@@ -268,35 +263,53 @@ function CreateShowcaseSheet({
                   <motion.div
                     drag="x"
                     dragConstraints={{
-                      left: -(CASE_COUNT - 1) * CASE_WIDTH,
+                      left: -(CASE_COUNT - 1) * CASE_STEP,
                       right: 0,
                     }}
                     dragElastic={0.18}
                     dragMomentum={false}
                     dragDirectionLock
-                    onDragEnd={handleCarouselDragEnd}
+                    onDragEnd={handleShowcaseTrackDragEnd}
                     style={{
-                      x: carouselX,
-                      width: CASE_WIDTH * CASE_COUNT,
-                      height: CASE_WIDTH,
-                      display: 'flex',
+                      x: showcaseTrackX,
+                      display: 'inline-flex',
+                      justifyContent: 'flex-start',
+                      alignItems: 'center',
+                      gap: CASE_PAGE_GAP,
                     }}
                   >
                     {DISPLAY_CASES.map((item) => (
                       <div
                         key={item.image}
                         style={{
-                          width: CASE_WIDTH,
-                          height: CASE_WIDTH,
+                          width: CASE_PAGE_WIDTH,
+                          display: 'inline-flex',
+                          flexDirection: 'column',
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                          gap: 24,
                           flexShrink: 0,
                         }}
                       >
+                        <div
+                          style={{
+                            alignSelf: 'stretch',
+                            color: 'rgba(0, 0, 0, 0.50)',
+                            fontSize: 15,
+                            fontFamily: PINGFANG,
+                            fontWeight: 400,
+                            lineHeight: '22px',
+                          }}
+                        >
+                          {item.description}
+                        </div>
+
                         <img
                           src={publicAsset(item.image)}
                           alt=""
                           style={{
-                            width: CASE_WIDTH,
-                            height: CASE_WIDTH,
+                            width: CASE_IMAGE_SIZE,
+                            height: CASE_IMAGE_SIZE,
                             display: 'block',
                             pointerEvents: 'none',
                             userSelect: 'none',
@@ -310,22 +323,32 @@ function CreateShowcaseSheet({
               </FloatInItem>
 
               {/* Footnote */}
-              <FloatInItem index={4} kind="item">
+              <FloatInItem index={3} kind="item" style={{ alignSelf: 'stretch' }}>
                 <div
                   style={{
-                    color: 'rgba(0, 0, 0, 0.30)',
-                    fontSize: 15,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
+                    alignSelf: 'stretch',
+                    display: 'inline-flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 10,
                   }}
                 >
-                  *Catlien也会将喜爱的物品放在这里。
+                  <div
+                    style={{
+                      color: 'rgba(0, 0, 0, 0.30)',
+                      fontSize: 15,
+                      fontFamily: PINGFANG,
+                      fontWeight: 400,
+                    }}
+                  >
+                    *Catlien也会将喜爱的物品放在这里。
+                  </div>
                 </div>
               </FloatInItem>
             </div>
 
             {/* Confirm button */}
-            <FloatInItem index={5} kind="item">
+            <FloatInItem index={4} kind="item">
               <button
                 type="button"
                 onClick={() => {
