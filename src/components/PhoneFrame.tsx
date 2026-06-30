@@ -4,11 +4,13 @@ import { publicAsset } from '../utils/assets'
 
 const PHONE_WIDTH = 402
 const PHONE_HEIGHT = 874
-const MAX_PHONE_SCALE = 1
+const STAGE_WIDTH = 1920
+const STAGE_HEIGHT = 1080
+const MAX_STAGE_SCALE = 1
 
 function getViewportSize() {
   if (typeof window === 'undefined') {
-    return { width: PHONE_WIDTH, height: PHONE_HEIGHT }
+    return { width: STAGE_WIDTH, height: STAGE_HEIGHT }
   }
 
   const visualViewport = window.visualViewport
@@ -19,14 +21,18 @@ function getViewportSize() {
   }
 }
 
-function getPhoneScale() {
-  if (typeof window === 'undefined') return MAX_PHONE_SCALE
+function getStageScale() {
+  if (typeof window === 'undefined') return MAX_STAGE_SCALE
 
   const { width, height } = getViewportSize()
 
-  if (width <= 0 || height <= 0) return MAX_PHONE_SCALE
+  if (width <= 0 || height <= 0) return MAX_STAGE_SCALE
 
-  return Math.min(width / PHONE_WIDTH, height / PHONE_HEIGHT, MAX_PHONE_SCALE)
+  return Math.min(
+    width / STAGE_WIDTH,
+    height / STAGE_HEIGHT,
+    MAX_STAGE_SCALE,
+  )
 }
 
 export default function PhoneFrame({ children }: { children: ReactNode }) {
@@ -34,11 +40,11 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
     typeof window !== 'undefined' && 'ontouchstart' in window,
   )
 
-  const [scale, setScale] = useState(() => getPhoneScale())
+  const [scale, setScale] = useState(() => getStageScale())
 
   useEffect(() => {
     const updateScale = () => {
-      setScale(getPhoneScale())
+      setScale(getStageScale())
     }
 
     updateScale()
@@ -53,6 +59,9 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
       window.visualViewport?.removeEventListener('resize', updateScale)
     }
   }, [])
+
+  const phoneLeft = (STAGE_WIDTH - PHONE_WIDTH) / 2
+  const phoneTop = (STAGE_HEIGHT - PHONE_HEIGHT) / 2
 
   const content = (
     <div
@@ -70,41 +79,52 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
     >
       <div
         style={{
-          width: PHONE_WIDTH * scale,
-          height: PHONE_HEIGHT * scale,
+          width: STAGE_WIDTH * scale,
+          height: STAGE_HEIGHT * scale,
           position: 'relative',
           flexShrink: 0,
         }}
       >
-        <img
-          src={publicAsset('img/bg.jpg')}
-          alt=""
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: PHONE_WIDTH * scale,
-            height: PHONE_HEIGHT * scale,
-            objectFit: 'cover',
-            display: 'block',
-            pointerEvents: 'none',
-            userSelect: 'none',
-          }}
-          draggable={false}
-        />
-
         <div
-          className="rounded-[64px] overflow-hidden bg-white relative"
           style={{
-            width: PHONE_WIDTH,
-            height: PHONE_HEIGHT,
+            width: STAGE_WIDTH,
+            height: STAGE_HEIGHT,
+            position: 'relative',
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
-            position: 'relative',
-            zIndex: 1,
           }}
         >
-          {children}
+          <img
+            src={publicAsset('img/bg.jpg')}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: STAGE_WIDTH,
+              height: STAGE_HEIGHT,
+              display: 'block',
+              objectFit: 'fill',
+              pointerEvents: 'none',
+              userSelect: 'none',
+            }}
+            draggable={false}
+          />
+
+          <div
+            className="rounded-[64px] overflow-hidden bg-white relative"
+            style={{
+              position: 'absolute',
+              left: phoneLeft,
+              top: phoneTop,
+              width: PHONE_WIDTH,
+              height: PHONE_HEIGHT,
+              zIndex: 1,
+            }}
+          >
+            {children}
+          </div>
         </div>
       </div>
     </div>
