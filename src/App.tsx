@@ -162,13 +162,52 @@ export default function App() {
   const [collectionLoadingOpen, setCollectionLoadingOpen] = useState(false)
   const [collectionResultOpen, setCollectionResultOpen] = useState(false)
   const [collectionSelectedCaseIndex, setCollectionSelectedCaseIndex] = useState(0)
+  const [collectionSavedShowcaseImage, setCollectionSavedShowcaseImage] = useState<string | null>(null)
   const collectionLoadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const COLLECTION_DISPLAY_CASE_IMAGES = [
-    'img/洞洞板.png',
-    'img/木制柜台.png',
-    'img/亚克力.png',
+  const COLLECTION_CASES = [
+    {
+      key: 'pegboard',
+      displayImage: 'img/洞洞板.png',
+      flow: 'item' as const,
+      placeTitle: '放置你的首件物品',
+      placeDescription: '上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。',
+      placeButtonLabel: '上传图片',
+      loadingTitle: '正在构建 3D 模型...',
+      loadingDescription: 'HarmonyOS Vision 正在为你构建模型，只需几秒。',
+      resultTitle: '物品已放入',
+      resultDescription: '物品模型已收入展柜。保存当前设置，稍后即可将其添加至桌面。',
+      resultImage: 'img/洞洞板_有图.png',
+    },
+    {
+      key: 'wood',
+      displayImage: 'img/木制柜台.png',
+      flow: 'preference' as const,
+      placeTitle: '探索你的音阅偏好',
+      placeDescription: '一键分析你喜爱的音乐与书籍，打造专属的展台空间。你的私人信息将被严格保护。',
+      placeButtonLabel: '开始分析',
+      loadingTitle: '正在分析你的音阅偏好',
+      loadingDescription: 'HarmonyOS Vision 正在分析你的音乐与读书偏好，只需几秒。',
+      resultTitle: '展柜已就绪',
+      resultDescription: '你喜爱的专辑与书籍已悉数收入。保存当前设置，稍后即可将其添加至桌面。',
+      resultImage: 'img/木柜_有图.png',
+    },
+    {
+      key: 'acrylic',
+      displayImage: 'img/亚克力.png',
+      flow: 'item' as const,
+      placeTitle: '放置你的首件物品',
+      placeDescription: '上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。',
+      placeButtonLabel: '上传图片',
+      loadingTitle: '正在构建 3D 模型...',
+      loadingDescription: 'HarmonyOS Vision 正在为你构建模型，只需几秒。',
+      resultTitle: '物品已放入',
+      resultDescription: '物品模型已收入展柜。保存当前设置，稍后即可将其添加至桌面。',
+      resultImage: 'img/亚克力_有图.png',
+    },
   ] as const
+
+  const selectedCollectionCase = COLLECTION_CASES[collectionSelectedCaseIndex]
 
   const handleAlbumCapture = useCallback((dataURL: string) => {
     setAlbumPhotos(prev => [dataURL, ...prev].slice(0, 10))
@@ -191,7 +230,10 @@ export default function App() {
     requestCharacterAnim('写日记')
   }, [goToDesktop, requestCharacterAnim])
 
-  const showToast = useCallback(() => {
+  const [toastMessage, setToastMessage] = useState('主题应用成功')
+
+  const showToast = useCallback((message = '主题应用成功') => {
+    setToastMessage(message)
     setToastKey(k => k + 1)
     setToastVisible(true)
     setTimeout(() => setToastVisible(false), 2500)
@@ -210,7 +252,8 @@ export default function App() {
     setCollectionGalleryOpen(true)
   }, [])
 
-  const handleCollectionPhotoSelect = useCallback((_photoIndex: number) => {
+  const startCollectionLoading = useCallback(() => {
+    setCollectionPlaceOpen(false)
     setCollectionGalleryOpen(false)
     setCollectionLoadingOpen(true)
 
@@ -224,6 +267,20 @@ export default function App() {
       collectionLoadingTimer.current = null
     }, 3000)
   }, [])
+
+  const handleCollectionPhotoSelect = useCallback((_photoIndex: number) => {
+    startCollectionLoading()
+  }, [startCollectionLoading])
+
+  const startCollectionPreferenceAnalysis = useCallback(() => {
+    startCollectionLoading()
+  }, [startCollectionLoading])
+
+  const handleCollectionResultSave = useCallback(() => {
+    setCollectionSavedShowcaseImage(selectedCollectionCase.resultImage)
+    setCollectionResultOpen(false)
+    showToast('保存成功')
+  }, [selectedCollectionCase.resultImage, showToast])
 
   useEffect(() => {
     return () => {
@@ -845,6 +902,7 @@ export default function App() {
             <CollectionWaterfallPage
               onBack={goToDesktop}
               onConfirmDisplayCase={openCollectionPlaceForCase}
+              savedShowcaseImage={collectionSavedShowcaseImage}
             />
           </motion.div>
         )}
@@ -855,9 +913,16 @@ export default function App() {
         {collectionPlaceOpen && (
           <CollectionPlaceFirstItemSheet
             key="collection-place-first-item-sheet"
-            selectedCaseImage={COLLECTION_DISPLAY_CASE_IMAGES[collectionSelectedCaseIndex]}
+            selectedCaseImage={selectedCollectionCase.displayImage}
+            title={selectedCollectionCase.placeTitle}
+            description={selectedCollectionCase.placeDescription}
+            buttonLabel={selectedCollectionCase.placeButtonLabel}
             onClose={() => setCollectionPlaceOpen(false)}
-            onUpload={openCollectionGalleryFromPlace}
+            onPrimaryAction={
+              selectedCollectionCase.flow === 'preference'
+                ? startCollectionPreferenceAnalysis
+                : openCollectionGalleryFromPlace
+            }
           />
         )}
       </AnimatePresence>
@@ -880,8 +945,8 @@ export default function App() {
           <LoadingCard
             key="collection-loading-card"
             state="loading"
-            title="正在构建 3D 模型..."
-            description="HarmonyOS Vision 正在为你构建模型，只需几秒。"
+            title={selectedCollectionCase.loadingTitle}
+            description={selectedCollectionCase.loadingDescription}
             onClose={() => {
               if (collectionLoadingTimer.current) {
                 clearTimeout(collectionLoadingTimer.current)
@@ -898,12 +963,11 @@ export default function App() {
         {collectionResultOpen && (
           <CollectionItemResultSheet
             key="collection-item-result-sheet"
-            selectedCaseImage={COLLECTION_DISPLAY_CASE_IMAGES[collectionSelectedCaseIndex]}
+            title={selectedCollectionCase.resultTitle}
+            description={selectedCollectionCase.resultDescription}
+            resultImage={selectedCollectionCase.resultImage}
             onClose={() => setCollectionResultOpen(false)}
-            onSave={() => {
-              setCollectionResultOpen(false)
-              // TODO: 保存后的真实逻辑稍后再做
-            }}
+            onSave={handleCollectionResultSave}
           />
         )}
       </AnimatePresence>
@@ -912,7 +976,7 @@ export default function App() {
       <StatusBar />
 
       {/* ── Success toast ── */}
-      <SuccessToast key={toastKey} visible={toastVisible} />
+      <SuccessToast key={toastKey} visible={toastVisible} message={toastMessage} />
     </PhoneFrame>
   )
 }

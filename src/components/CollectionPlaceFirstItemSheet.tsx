@@ -9,14 +9,20 @@ const XMARK = String.fromCodePoint(0x100184)
 
 interface CollectionPlaceFirstItemSheetProps {
   selectedCaseImage: string
+  title: string
+  description: string
+  buttonLabel: string
   onClose: () => void
-  onUpload: () => void
+  onPrimaryAction: () => void
 }
 
 export default function CollectionPlaceFirstItemSheet({
   selectedCaseImage,
+  title,
+  description,
+  buttonLabel,
   onClose,
-  onUpload,
+  onPrimaryAction,
 }: CollectionPlaceFirstItemSheetProps) {
   return (
     <>
@@ -185,7 +191,7 @@ export default function CollectionPlaceFirstItemSheet({
                       fontWeight: 600,
                     }}
                   >
-                    放置你的首件物品
+                    {title}
                   </div>
                 </div>
               </FloatInItem>
@@ -211,7 +217,7 @@ export default function CollectionPlaceFirstItemSheet({
                       lineHeight: '22px',
                     }}
                   >
-                    上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。
+                    {description}
                   </div>
 
                   <img
@@ -258,7 +264,7 @@ export default function CollectionPlaceFirstItemSheet({
             <FloatInItem index={4} kind="item">
               <button
                 type="button"
-                onClick={onUpload}
+                onClick={onPrimaryAction}
                 className="active:scale-[0.98] transition-transform"
                 style={{
                   width: 370,
@@ -300,7 +306,7 @@ export default function CollectionPlaceFirstItemSheet({
                       fontWeight: 500,
                     }}
                   >
-                    上传图片
+                    {buttonLabel}
                   </div>
                 </div>
               </button>

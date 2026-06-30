@@ -2,9 +2,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 
 interface SuccessToastProps {
   visible: boolean
+  message?: string
 }
 
-export default function SuccessToast({ visible }: SuccessToastProps) {
+export default function SuccessToast({ visible, message = '主题应用成功' }: SuccessToastProps) {
   return (
     <AnimatePresence>
       {visible && (
@@ -26,7 +27,7 @@ export default function SuccessToast({ visible }: SuccessToastProps) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            <span className="text-[15px] font-medium">主题应用成功</span>
+            <span className="text-[15px] font-medium">{message}</span>
           </motion.div>
         </motion.div>
       )}

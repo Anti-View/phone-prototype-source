@@ -426,9 +426,11 @@ function ChooseShowcaseSheet({
 export default function CollectionWaterfallPage({
   onBack,
   onConfirmDisplayCase,
+  savedShowcaseImage,
 }: {
   onBack: () => void
   onConfirmDisplayCase: (selectedCaseIndex: number) => void
+  savedShowcaseImage: string | null
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
@@ -1165,77 +1167,94 @@ export default function CollectionWaterfallPage({
               </div>
 
               <FloatInItem index={9} kind="card">
-                <motion.div
-                  data-create-showcase-card
-                  style={{
-                    width: 362,
-                    height: 362,
-                    position: 'relative',
-                    cursor: 'pointer',
-                    transformOrigin: 'center center',
-                  }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 520,
-                    damping: 34,
-                    mass: 0.6,
-                  }}
-                >
-                  <div
+                {!savedShowcaseImage ? (
+                  <motion.div
+                    data-create-showcase-card
                     style={{
                       width: 362,
                       height: 362,
-                      left: 0,
-                      top: 0,
-                      position: 'absolute',
-                      borderRadius: 32,
-                      border: '1px dashed rgba(0, 0, 0, 0.15)',
+                      position: 'relative',
+                      cursor: 'pointer',
+                      transformOrigin: 'center center',
                     }}
-                  />
-
-                  <div
-                    style={{
-                      width: 127,
-                      left: 117,
-                      top: 150,
-                      position: 'absolute',
-                      display: 'inline-flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-start',
-                      alignItems: 'center',
-                      gap: 8,
+                    whileTap={{ scale: 0.98 }}
+                    transition={{
+                      type: 'spring',
+                      stiffness: 520,
+                      damping: 34,
+                      mass: 0.6,
                     }}
                   >
                     <div
                       style={{
-                        alignSelf: 'stretch',
-                        textAlign: 'center',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        color: 'rgba(0, 0, 0, 0.50)',
-                        fontSize: 28,
-                        fontFamily: SF,
-                        fontWeight: 274,
+                        width: 362,
+                        height: 362,
+                        left: 0,
+                        top: 0,
+                        position: 'absolute',
+                        borderRadius: 32,
+                        border: '1px dashed rgba(0, 0, 0, 0.15)',
                       }}
-                    >
-                      􀁌
-                    </div>
+                    />
 
                     <div
                       style={{
-                        alignSelf: 'stretch',
-                        color: 'rgba(0, 0, 0, 0.80)',
-                        fontSize: 14,
-                        fontFamily: PINGFANG,
-                        fontWeight: 400,
+                        width: 127,
+                        left: 117,
+                        top: 150,
+                        position: 'absolute',
+                        display: 'inline-flex',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        gap: 8,
                       }}
                     >
-                      创建新的 Showcase
+                      <div
+                        style={{
+                          alignSelf: 'stretch',
+                          textAlign: 'center',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          color: 'rgba(0, 0, 0, 0.50)',
+                          fontSize: 28,
+                          fontFamily: SF,
+                          fontWeight: 274,
+                        }}
+                      >
+                        􀁌
+                      </div>
+
+                      <div
+                        style={{
+                          alignSelf: 'stretch',
+                          color: 'rgba(0, 0, 0, 0.80)',
+                          fontSize: 14,
+                          fontFamily: PINGFANG,
+                          fontWeight: 400,
+                        }}
+                      >
+                        创建新的 Showcase
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                ) : (
+                  <img
+                    src={publicAsset(savedShowcaseImage)}
+                    alt=""
+                    style={{
+                      width: 362,
+                      height: 362,
+                      display: 'block',
+                      borderRadius: 32,
+                      objectFit: 'cover',
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    }}
+                    draggable={false}
+                  />
+                )}
               </FloatInItem>
             </div>
           </FloatInGroup>

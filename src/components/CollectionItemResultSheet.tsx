@@ -8,13 +8,17 @@ const SHEET_SHADOW = '0px 15px 75px rgba(0, 0, 0, 0.18)'
 const XMARK = String.fromCodePoint(0x100184)
 
 interface CollectionItemResultSheetProps {
-  selectedCaseImage: string
+  title: string
+  description: string
+  resultImage: string
   onClose: () => void
   onSave: () => void
 }
 
 export default function CollectionItemResultSheet({
-  selectedCaseImage,
+  title,
+  description,
+  resultImage,
   onClose,
   onSave,
 }: CollectionItemResultSheetProps) {
@@ -175,7 +179,7 @@ export default function CollectionItemResultSheet({
                     fontWeight: 600,
                   }}
                 >
-                  物品已放入
+                  {title}
                 </div>
               </FloatInItem>
 
@@ -190,46 +194,23 @@ export default function CollectionItemResultSheet({
                     lineHeight: '22px',
                   }}
                 >
-                  物品模型已收入展柜。保存当前设置，稍后即可将其添加至桌面。
+                  {description}
                 </div>
               </FloatInItem>
 
               <FloatInItem index={3} kind="image">
-                <div
+                <img
+                  src={publicAsset(resultImage)}
+                  alt=""
                   style={{
                     width: 322,
                     height: 322,
-                    position: 'relative',
+                    display: 'block',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
                   }}
-                >
-                  <img
-                    src={publicAsset(selectedCaseImage)}
-                    alt=""
-                    style={{
-                      width: 322,
-                      height: 322,
-                      left: 0,
-                      top: 0,
-                      position: 'absolute',
-                    }}
-                    draggable={false}
-                  />
-
-                  <img
-                    src={publicAsset('img/小挂件.png')}
-                    alt=""
-                    style={{
-                      width: 90,
-                      height: 123,
-                      left: 116,
-                      top: 64,
-                      position: 'absolute',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
-                    }}
-                    draggable={false}
-                  />
-                </div>
+                  draggable={false}
+                />
               </FloatInItem>
             </div>
 
