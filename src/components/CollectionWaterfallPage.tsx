@@ -416,7 +416,6 @@ export default function CollectionWaterfallPage({
                 <FloatInItem index={1} kind="card" style={{ alignSelf: 'stretch' }}>
                   <div
                     style={{
-                      alignSelf: 'stretch',
                       paddingLeft: 20,
                       paddingRight: 20,
                       paddingTop: 16,
@@ -424,7 +423,7 @@ export default function CollectionWaterfallPage({
                       background: 'rgba(255, 255, 255, 0.40)',
                       boxShadow: GLASS_CARD_SHADOW,
                       borderRadius: 16,
-                      display: 'inline-flex',
+                      display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
@@ -617,7 +616,6 @@ export default function CollectionWaterfallPage({
                 <FloatInItem index={5} kind="card" style={{ alignSelf: 'stretch' }}>
                   <div
                     style={{
-                      alignSelf: 'stretch',
                       paddingLeft: 20,
                       paddingRight: 20,
                       paddingTop: 16,
@@ -625,7 +623,7 @@ export default function CollectionWaterfallPage({
                       background: 'rgba(255, 255, 255, 0.40)',
                       boxShadow: GLASS_CARD_SHADOW,
                       borderRadius: 16,
-                      display: 'inline-flex',
+                      display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
