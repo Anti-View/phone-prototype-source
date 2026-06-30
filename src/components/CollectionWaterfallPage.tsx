@@ -10,11 +10,43 @@ const GLASS_CARD_SHADOW = '0px 1px 1px #D0D5EA inset, 0px -2px 1px white inset'
 const SHEET_SHADOW = '0px 15px 75px rgba(0, 0, 0, 0.18)'
 const XMARK = String.fromCodePoint(0x100184)
 
+const DISPLAY_CASES = [
+  {
+    image: 'img/洞洞板.png',
+    description:
+      '趣味洞洞板为你定格现实好物，开启 HarmonyOS Vision，把它们变成贴纸与挂件随心定格。',
+  },
+  {
+    image: 'img/木质柜台.png',
+    description:
+      '经典木质展台，专为陈列专辑与书封而设，你和 Catlien 的心头好，皆在此悉数收纳。',
+  },
+  {
+    image: 'img/亚克力.png',
+    description:
+      '借助 HarmonyOS Vision，将现实物品化作 3D 模型，收入你的亚克力展柜。',
+  },
+] as const
+
 function CreateShowcaseSheet({
   onClose,
 }: {
   onClose: () => void
 }) {
+  const [selectedCaseIndex, setSelectedCaseIndex] = useState(0)
+  const carouselRef = useRef<HTMLDivElement | null>(null)
+  const selectedCase = DISPLAY_CASES[selectedCaseIndex]
+
+  const handleCarouselScroll = useCallback(() => {
+    const el = carouselRef.current
+    if (!el) return
+
+    const nextIndex = Math.round(el.scrollLeft / 322)
+    const clampedIndex = Math.max(0, Math.min(DISPLAY_CASES.length - 1, nextIndex))
+
+    setSelectedCaseIndex(clampedIndex)
+  }, [])
+
   return (
     <>
       <motion.div
@@ -27,7 +59,7 @@ function CreateShowcaseSheet({
       />
 
       <motion.div
-        className="absolute bottom-0 left-0 w-full h-[702px] bg-white rounded-t-[38px] z-30 flex flex-col"
+        className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
         style={{
           boxShadow: SHEET_SHADOW,
           fontFamily: 'var(--font-ui)',
@@ -42,38 +74,272 @@ function CreateShowcaseSheet({
           mass: 1.1,
         }}
       >
-        <div className="flex flex-col items-center pb-[10px]">
-          <div className="pt-[5px] pb-[10px]">
-            <svg width="36" height="5" viewBox="0 0 36 5" fill="none">
-              <path
-                d="M0 2.5C0 1.11929 1.11929 0 2.5 0H33.5C34.8807 0 36 1.11929 36 2.5C36 3.88071 34.8807 5 33.5 5H2.5C1.11929 5 0 3.88071 0 2.5Z"
-                fill="#CCCCCC"
-              />
-            </svg>
-          </div>
-
-          <div className="w-full px-4 flex justify-between items-center">
-            <button
-              onClick={onClose}
-              className="w-[44px] h-[44px] rounded-full bg-black/[0.08] flex items-center justify-center hover-darken active:scale-90 transition-transform cursor-pointer"
+        <FloatInGroup startDelay={100} resetKey="create-showcase-sheet" step={0.16}>
+          {/* Header with handle + close */}
+          <FloatInItem index={0} kind="item" style={{ alignSelf: 'stretch' }}>
+            <div
+              style={{
+                alignSelf: 'stretch',
+                paddingBottom: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+              }}
             >
-              <span
+              <div
                 style={{
-                  fontFamily: SF,
-                  fontSize: 17,
-                  color: '#727272',
-                  lineHeight: 1,
+                  height: 16,
+                  paddingTop: 5,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  alignItems: 'flex-start',
                 }}
               >
-                {XMARK}
-              </span>
-            </button>
+                <svg width="36" height="5" viewBox="0 0 36 5" fill="none">
+                  <path
+                    d="M0 2.5C0 1.11929 1.11929 0 2.5 0H33.5C34.8807 0 36 1.11929 36 2.5C36 3.88071 34.8807 5 33.5 5H2.5C1.11929 5 0 3.88071 0 2.5Z"
+                    fill="#CCCCCC"
+                  />
+                </svg>
+              </div>
 
-            <div className="w-8" />
+              <div
+                style={{
+                  alignSelf: 'stretch',
+                  paddingLeft: 16,
+                  paddingRight: 16,
+                  position: 'relative',
+                  display: 'inline-flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={onClose}
+                  style={{
+                    height: 44,
+                    minWidth: 44,
+                    paddingLeft: 4,
+                    paddingRight: 4,
+                    position: 'relative',
+                    borderRadius: 296,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 12,
+                    border: 0,
+                    background: 'transparent',
+                    cursor: 'pointer',
+                  }}
+                  className="active:scale-90 transition-transform"
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      left: 0,
+                      top: 0,
+                      position: 'absolute',
+                      borderRadius: 999,
+                      background: 'rgba(120, 120, 128, 0.16)',
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: 36,
+                      alignSelf: 'stretch',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      color: '#727272',
+                      fontSize: 17,
+                      fontFamily: SF,
+                      fontWeight: 510,
+                    }}
+                  >
+                    􀆄
+                  </div>
+                </button>
+
+                <div style={{ width: 8, alignSelf: 'stretch', position: 'relative' }} />
+                <div style={{ width: 36, height: 22 }} />
+              </div>
+            </div>
+          </FloatInItem>
+
+          {/* Body */}
+          <div
+            style={{
+              alignSelf: 'stretch',
+              paddingBottom: 36,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'flex-start',
+              alignItems: 'center',
+              gap: 40,
+            }}
+          >
+            <div
+              style={{
+                alignSelf: 'stretch',
+                paddingLeft: 32,
+                paddingRight: 32,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 24,
+              }}
+            >
+              {/* Title */}
+              <FloatInItem index={1} kind="item">
+                <div
+                  style={{
+                    color: 'black',
+                    fontSize: 22,
+                    fontFamily: PINGFANG,
+                    fontWeight: 600,
+                  }}
+                >
+                  选择展柜
+                </div>
+              </FloatInItem>
+
+              {/* Description — changes with selected case */}
+              <FloatInItem index={2} kind="item" style={{ alignSelf: 'stretch' }}>
+                <div
+                  style={{
+                    alignSelf: 'stretch',
+                    color: 'rgba(0, 0, 0, 0.50)',
+                    fontSize: 15,
+                    fontFamily: PINGFANG,
+                    fontWeight: 400,
+                    lineHeight: '22px',
+                  }}
+                >
+                  {selectedCase.description}
+                </div>
+              </FloatInItem>
+
+              {/* Carousel */}
+              <FloatInItem index={3} kind="image">
+                <div
+                  ref={carouselRef}
+                  onScroll={handleCarouselScroll}
+                  className="[&::-webkit-scrollbar]:hidden"
+                  style={{
+                    width: 322,
+                    height: 322,
+                    overflowX: 'auto',
+                    overflowY: 'hidden',
+                    display: 'flex',
+                    scrollSnapType: 'x mandatory',
+                    scrollBehavior: 'smooth',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none',
+                    touchAction: 'pan-x',
+                  }}
+                >
+                  {DISPLAY_CASES.map((item) => (
+                    <div
+                      key={item.image}
+                      style={{
+                        width: 322,
+                        height: 322,
+                        flexShrink: 0,
+                        scrollSnapAlign: 'center',
+                      }}
+                    >
+                      <img
+                        src={publicAsset(item.image)}
+                        alt=""
+                        style={{
+                          width: 322,
+                          height: 322,
+                          display: 'block',
+                        }}
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </FloatInItem>
+
+              {/* Footnote */}
+              <FloatInItem index={4} kind="item">
+                <div
+                  style={{
+                    color: 'rgba(0, 0, 0, 0.30)',
+                    fontSize: 15,
+                    fontFamily: PINGFANG,
+                    fontWeight: 400,
+                  }}
+                >
+                  *Catlien也会将喜爱的物品放在这里。
+                </div>
+              </FloatInItem>
+            </div>
+
+            {/* Confirm button */}
+            <FloatInItem index={5} kind="item">
+              <button
+                type="button"
+                onClick={() => {
+                  // TODO: 下一步流程稍后再做
+                }}
+                className="active:scale-[0.98] transition-transform"
+                style={{
+                  width: 370,
+                  height: 52,
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  paddingTop: 6,
+                  paddingBottom: 6,
+                  position: 'relative',
+                  borderRadius: 1000,
+                  display: 'inline-flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 4,
+                  border: 0,
+                  background: '#0088FF',
+                  boxShadow: '0px 8px 40px rgba(0, 0, 0, 0.12)',
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  style={{
+                    height: 36,
+                    borderRadius: 100,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      color: 'white',
+                      fontSize: 17,
+                      fontFamily: PINGFANG,
+                      fontWeight: 500,
+                    }}
+                  >
+                    确定
+                  </div>
+                </div>
+              </button>
+            </FloatInItem>
           </div>
-        </div>
-
-        <div className="flex-1" />
+        </FloatInGroup>
       </motion.div>
     </>
   )
