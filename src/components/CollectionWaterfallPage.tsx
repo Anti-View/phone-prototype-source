@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent, type ReactNode } from 'react'
 import { AnimatePresence, animate, motion, useMotionValue, type PanInfo } from 'framer-motion'
 import NavBar from './NavBar'
 import { publicAsset } from '../utils/assets'
@@ -8,7 +8,6 @@ const SF = "'SF Pro Display', 'SF Pro', -apple-system"
 const PINGFANG = "'PingFang SC', sans-serif"
 const GLASS_CARD_SHADOW = '0px 1px 1px #D0D5EA inset, 0px -2px 1px white inset'
 const SHEET_SHADOW = '0px 15px 75px rgba(0, 0, 0, 0.18)'
-const XMARK = String.fromCodePoint(0x100184)
 
 const DISPLAY_CASES = [
   {
@@ -28,12 +27,196 @@ const DISPLAY_CASES = [
   },
 ] as const
 
-function CreateShowcaseSheet({
+/* ── Shared shell for showcase sheets ── */
+function ShowcaseSheetShell({
+  children,
   onClose,
-  onOpenGallery,
+}: {
+  children: ReactNode
+  onClose: () => void
+}) {
+  return (
+    <motion.div
+      className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
+      style={{
+        boxShadow: SHEET_SHADOW,
+        fontFamily: 'var(--font-ui)',
+      }}
+      initial={{ y: '100%' }}
+      animate={{ y: 0 }}
+      exit={{ y: '100%' }}
+      transition={{
+        type: 'spring',
+        damping: 28,
+        stiffness: 280,
+        mass: 1.1,
+      }}
+    >
+      <div
+        style={{
+          alignSelf: 'stretch',
+          paddingBottom: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+        }}
+      >
+        <div
+          style={{
+            height: 16,
+            paddingTop: 5,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'flex-start',
+          }}
+        >
+          <svg width="36" height="5" viewBox="0 0 36 5" fill="none">
+            <path
+              d="M0 2.5C0 1.11929 1.11929 0 2.5 0H33.5C34.8807 0 36 1.11929 36 2.5C36 3.88071 34.8807 5 33.5 5H2.5C1.11929 5 0 3.88071 0 2.5Z"
+              fill="#CCCCCC"
+            />
+          </svg>
+        </div>
+
+        <div
+          style={{
+            alignSelf: 'stretch',
+            paddingLeft: 16,
+            paddingRight: 16,
+            position: 'relative',
+            display: 'inline-flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              height: 44,
+              minWidth: 44,
+              paddingLeft: 4,
+              paddingRight: 4,
+              position: 'relative',
+              borderRadius: 296,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: 12,
+              border: 0,
+              background: 'transparent',
+              cursor: 'pointer',
+            }}
+            className="active:scale-90 transition-transform"
+          >
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                left: 0,
+                top: 0,
+                position: 'absolute',
+                borderRadius: 999,
+                background: 'rgba(120, 120, 128, 0.16)',
+              }}
+            />
+            <div
+              style={{
+                width: 36,
+                alignSelf: 'stretch',
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                color: '#727272',
+                fontSize: 17,
+                fontFamily: SF,
+                fontWeight: 510,
+              }}
+            >
+              􀆄
+            </div>
+          </button>
+
+          <div style={{ width: 8, alignSelf: 'stretch', position: 'relative' }} />
+          <div style={{ width: 36, height: 22 }} />
+        </div>
+      </div>
+
+      {children}
+    </motion.div>
+  )
+}
+
+/* ── Shared primary button ── */
+function PrimaryButton({
+  label,
+  onClick,
+}: {
+  label: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="active:scale-[0.98] transition-transform"
+      style={{
+        width: 370,
+        height: 52,
+        paddingLeft: 20,
+        paddingRight: 20,
+        paddingTop: 6,
+        paddingBottom: 6,
+        position: 'relative',
+        borderRadius: 1000,
+        display: 'inline-flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 4,
+        border: 0,
+        background: '#0088FF',
+        boxShadow: '0px 8px 40px rgba(0, 0, 0, 0.12)',
+        cursor: 'pointer',
+      }}
+    >
+      <div
+        style={{
+          height: 36,
+          borderRadius: 100,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <div
+          style={{
+            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: 17,
+            fontFamily: PINGFANG,
+            fontWeight: 500,
+          }}
+        >
+          {label}
+        </div>
+      </div>
+    </button>
+  )
+}
+
+/* ── Sheet 1: Choose showcase ── */
+function ChooseShowcaseSheet({
+  onClose,
+  onConfirm,
 }: {
   onClose: () => void
-  onOpenGallery: () => void
+  onConfirm: (selectedIndex: number) => void
 }) {
   const CASE_PAGE_WIDTH = 338
   const CASE_IMAGE_SIZE = 322
@@ -42,14 +225,10 @@ function CreateShowcaseSheet({
   const CASE_COUNT = DISPLAY_CASES.length
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0)
   const showcaseTrackX = useMotionValue(0)
-  const [showcaseApplied, setShowcaseApplied] = useState(false)
-  const selectedCase = DISPLAY_CASES[selectedCaseIndex]
 
   const snapToShowcaseCase = useCallback((index: number) => {
     const target = Math.max(0, Math.min(CASE_COUNT - 1, index))
-
     setSelectedCaseIndex(target)
-
     animate(showcaseTrackX, -target * CASE_STEP, {
       type: 'spring',
       stiffness: 300,
@@ -62,9 +241,7 @@ function CreateShowcaseSheet({
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const threshold = 50
       const velocityThreshold = 450
-
       let target = selectedCaseIndex
-
       if (
         (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) &&
         selectedCaseIndex < CASE_COUNT - 1
@@ -76,589 +253,315 @@ function CreateShowcaseSheet({
       ) {
         target = selectedCaseIndex - 1
       }
-
       snapToShowcaseCase(target)
     },
     [selectedCaseIndex, snapToShowcaseCase],
   )
 
-  const handlePrimaryAction = useCallback(() => {
-    if (!showcaseApplied) {
-      snapToShowcaseCase(selectedCaseIndex)
-      setShowcaseApplied(true)
-      return
-    }
-
-    onOpenGallery()
-  }, [showcaseApplied, selectedCaseIndex, snapToShowcaseCase, onOpenGallery])
-
-  const sceneVariants = {
-    initial: {},
-    animate: {
-      transition: {
-        staggerChildren: 0.08,
-        delayChildren: 0.02,
-      },
-    },
-    exit: {
-      transition: {
-        staggerChildren: 0.06,
-        staggerDirection: 1,
-      },
-    },
-  }
-
-  const sceneRowVariants = {
-    initial: {
-      opacity: 0,
-      y: 30,
-      filter: 'blur(5px)',
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-      filter: 'blur(0px)',
-      transition: {
-        y: { type: 'spring' as const, stiffness: 105, damping: 22, mass: 1.18 },
-        opacity: { duration: 0.42, ease: [0.22, 1, 0.36, 1] as const },
-        filter: { duration: 0.46, ease: [0.22, 1, 0.36, 1] as const },
-      },
-    },
-    exit: {
-      opacity: 0,
-      y: 28,
-      filter: 'blur(6px)',
-      transition: {
-        y: { type: 'spring' as const, stiffness: 130, damping: 24, mass: 0.95 },
-        opacity: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
-        filter: { duration: 0.28, ease: [0.22, 1, 0.36, 1] as const },
-      },
-    },
-  }
+  const handleConfirm = useCallback(() => {
+    snapToShowcaseCase(selectedCaseIndex)
+    onConfirm(selectedCaseIndex)
+  }, [selectedCaseIndex, snapToShowcaseCase, onConfirm])
 
   return (
-    <>
-      <motion.div
-        className="absolute inset-0 bg-black/50 z-20"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3 }}
-        onClick={onClose}
-      />
-
-      <motion.div
-        className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
+    <ShowcaseSheetShell onClose={onClose}>
+      <div
         style={{
-          boxShadow: SHEET_SHADOW,
-          fontFamily: 'var(--font-ui)',
-        }}
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{
-          type: 'spring',
-          damping: 28,
-          stiffness: 280,
-          mass: 1.1,
+          alignSelf: 'stretch',
+          paddingBottom: 36,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          gap: 40,
         }}
       >
-        <FloatInGroup startDelay={100} resetKey="create-showcase-sheet" step={0.16}>
-          {/* Header with handle + close */}
-          <FloatInItem index={0} kind="item" style={{ alignSelf: 'stretch' }}>
-            <div
-              style={{
-                alignSelf: 'stretch',
-                paddingBottom: 10,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-start',
-                alignItems: 'center',
-              }}
-            >
-              <div
-                style={{
-                  height: 16,
-                  paddingTop: 5,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                }}
-              >
-                <svg width="36" height="5" viewBox="0 0 36 5" fill="none">
-                  <path
-                    d="M0 2.5C0 1.11929 1.11929 0 2.5 0H33.5C34.8807 0 36 1.11929 36 2.5C36 3.88071 34.8807 5 33.5 5H2.5C1.11929 5 0 3.88071 0 2.5Z"
-                    fill="#CCCCCC"
-                  />
-                </svg>
-              </div>
-
-              <div
-                style={{
-                  alignSelf: 'stretch',
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  position: 'relative',
-                  display: 'inline-flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={onClose}
-                  style={{
-                    height: 44,
-                    minWidth: 44,
-                    paddingLeft: 4,
-                    paddingRight: 4,
-                    position: 'relative',
-                    borderRadius: 296,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: 12,
-                    border: 0,
-                    background: 'transparent',
-                    cursor: 'pointer',
-                  }}
-                  className="active:scale-90 transition-transform"
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      left: 0,
-                      top: 0,
-                      position: 'absolute',
-                      borderRadius: 999,
-                      background: 'rgba(120, 120, 128, 0.16)',
-                    }}
-                  />
-                  <div
-                    style={{
-                      width: 36,
-                      alignSelf: 'stretch',
-                      textAlign: 'center',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      color: '#727272',
-                      fontSize: 17,
-                      fontFamily: SF,
-                      fontWeight: 510,
-                    }}
-                  >
-                    􀆄
-                  </div>
-                </button>
-
-                <div style={{ width: 8, alignSelf: 'stretch', position: 'relative' }} />
-                <div style={{ width: 36, height: 22 }} />
-              </div>
-            </div>
-          </FloatInItem>
-
+        <FloatInGroup startDelay={160} resetKey="choose-showcase-sheet-content" step={0.16}>
           <div
             style={{
               alignSelf: 'stretch',
-              paddingBottom: 36,
+              paddingLeft: 32,
+              paddingRight: 32,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: 40,
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              gap: 24,
             }}
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {!showcaseApplied ? (
-                /* Scene 1: Choose showcase */
-                <motion.div
-                  key="choose-showcase-scene"
-                  variants={sceneVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
+            {/* Title */}
+            <FloatInItem index={0} kind="item" style={{ width: '100%' }}>
+              <div
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 10,
+                  textAlign: 'center',
+                }}
+              >
+                <div
                   style={{
-                    alignSelf: 'stretch',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    gap: 40,
+                    color: 'black',
+                    fontSize: 22,
+                    fontFamily: PINGFANG,
+                    fontWeight: 600,
                   }}
                 >
-                  <div
-                    style={{
-                      alignSelf: 'stretch',
-                      paddingLeft: 32,
-                      paddingRight: 32,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'flex-start',
-                      gap: 24,
-                    }}
-                  >
-                    {/* Title */}
-                    <motion.div variants={sceneRowVariants} style={{ width: '100%' }}>
-                      <div
-                        style={{
-                          width: '100%',
-                          display: 'inline-flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: 10,
-                          textAlign: 'center',
-                        }}
-                      >
-                        <div
-                          style={{
-                            color: 'black',
-                            fontSize: 22,
-                            fontFamily: PINGFANG,
-                            fontWeight: 600,
-                          }}
-                        >
-                          选择展柜
-                        </div>
-                      </div>
-                    </motion.div>
+                  选择展柜
+                </div>
+              </div>
+            </FloatInItem>
 
-                    {/* Horizontal track */}
-                    <motion.div variants={sceneRowVariants}>
-                      <div
-                        style={{
-                          width: CASE_PAGE_WIDTH,
-                          overflow: 'visible',
-                          touchAction: 'pan-x',
-                          cursor: 'grab',
-                        }}
-                      >
-                        <motion.div
-                          drag="x"
-                          dragConstraints={{
-                            left: -(CASE_COUNT - 1) * CASE_STEP,
-                            right: 0,
-                          }}
-                          dragElastic={0.18}
-                          dragMomentum={false}
-                          dragDirectionLock
-                          onDragEnd={handleShowcaseTrackDragEnd}
-                          style={{
-                            x: showcaseTrackX,
-                            display: 'inline-flex',
-                            justifyContent: 'flex-start',
-                            alignItems: 'center',
-                            gap: CASE_PAGE_GAP,
-                          }}
-                        >
-                          {DISPLAY_CASES.map((item) => (
-                            <div
-                              key={item.image}
-                              style={{
-                                width: CASE_PAGE_WIDTH,
-                                display: 'inline-flex',
-                                flexDirection: 'column',
-                                justifyContent: 'flex-start',
-                                alignItems: 'center',
-                                gap: 24,
-                                flexShrink: 0,
-                              }}
-                            >
-                              <div
-                                style={{
-                                  alignSelf: 'stretch',
-                                  color: 'rgba(0, 0, 0, 0.50)',
-                                  fontSize: 15,
-                                  fontFamily: PINGFANG,
-                                  fontWeight: 400,
-                                  lineHeight: '22px',
-                                }}
-                              >
-                                {item.description}
-                              </div>
-
-                              <img
-                                src={publicAsset(item.image)}
-                                alt=""
-                                style={{
-                                  width: CASE_IMAGE_SIZE,
-                                  height: CASE_IMAGE_SIZE,
-                                  display: 'block',
-                                  pointerEvents: 'none',
-                                  userSelect: 'none',
-                                }}
-                                draggable={false}
-                              />
-                            </div>
-                          ))}
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    {/* Footnote */}
-                    <motion.div variants={sceneRowVariants} style={{ width: '100%' }}>
-                      <div
-                        style={{
-                          width: '100%',
-                          display: 'inline-flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: 10,
-                          textAlign: 'center',
-                        }}
-                      >
-                        <div
-                          style={{
-                            color: 'rgba(0, 0, 0, 0.30)',
-                            fontSize: 15,
-                            fontFamily: PINGFANG,
-                            fontWeight: 400,
-                            textAlign: 'center',
-                          }}
-                        >
-                          *Catlien也会将喜爱的物品放在这里。
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* Confirm button */}
-                  <motion.div variants={sceneRowVariants}>
-                    <button
-                      type="button"
-                      onClick={handlePrimaryAction}
-                      className="active:scale-[0.98] transition-transform"
+            {/* Horizontal track */}
+            <FloatInItem index={1} kind="item">
+              <div
+                style={{
+                  width: CASE_PAGE_WIDTH,
+                  overflow: 'visible',
+                  touchAction: 'pan-x',
+                  cursor: 'grab',
+                }}
+              >
+                <motion.div
+                  drag="x"
+                  dragConstraints={{
+                    left: -(CASE_COUNT - 1) * CASE_STEP,
+                    right: 0,
+                  }}
+                  dragElastic={0.18}
+                  dragMomentum={false}
+                  dragDirectionLock
+                  onDragEnd={handleShowcaseTrackDragEnd}
+                  style={{
+                    x: showcaseTrackX,
+                    display: 'inline-flex',
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    gap: CASE_PAGE_GAP,
+                  }}
+                >
+                  {DISPLAY_CASES.map((item) => (
+                    <div
+                      key={item.image}
                       style={{
-                        width: 370,
-                        height: 52,
-                        paddingLeft: 20,
-                        paddingRight: 20,
-                        paddingTop: 6,
-                        paddingBottom: 6,
-                        position: 'relative',
-                        borderRadius: 1000,
+                        width: CASE_PAGE_WIDTH,
                         display: 'inline-flex',
-                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        justifyContent: 'flex-start',
                         alignItems: 'center',
-                        gap: 4,
-                        border: 0,
-                        background: '#0088FF',
-                        boxShadow: '0px 8px 40px rgba(0, 0, 0, 0.12)',
-                        cursor: 'pointer',
+                        gap: 24,
+                        flexShrink: 0,
                       }}
                     >
                       <div
                         style={{
-                          height: 36,
-                          borderRadius: 100,
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
+                          alignSelf: 'stretch',
+                          color: 'rgba(0, 0, 0, 0.50)',
+                          fontSize: 15,
+                          fontFamily: PINGFANG,
+                          fontWeight: 400,
+                          lineHeight: '22px',
                         }}
                       >
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: 17,
-                            fontFamily: PINGFANG,
-                            fontWeight: 500,
-                          }}
-                        >
-                          确定
-                        </div>
+                        {item.description}
                       </div>
-                    </button>
-                  </motion.div>
+
+                      <img
+                        src={publicAsset(item.image)}
+                        alt=""
+                        style={{
+                          width: CASE_IMAGE_SIZE,
+                          height: CASE_IMAGE_SIZE,
+                          display: 'block',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        }}
+                        draggable={false}
+                      />
+                    </div>
+                  ))}
                 </motion.div>
-              ) : (
-                /* Scene 2: Place first item */
-                <motion.div
-                  key="place-first-item-scene"
-                  variants={sceneVariants}
-                  initial="initial"
-                  animate="animate"
-                  exit="exit"
+              </div>
+            </FloatInItem>
+
+            {/* Footnote */}
+            <FloatInItem index={2} kind="item" style={{ width: '100%' }}>
+              <div
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 10,
+                  textAlign: 'center',
+                }}
+              >
+                <div
                   style={{
-                    alignSelf: 'stretch',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    gap: 40,
+                    color: 'rgba(0, 0, 0, 0.30)',
+                    fontSize: 15,
+                    fontFamily: PINGFANG,
+                    fontWeight: 400,
+                    textAlign: 'center',
                   }}
                 >
-                  <div
-                    style={{
-                      alignSelf: 'stretch',
-                      paddingLeft: 32,
-                      paddingRight: 32,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'flex-start',
-                      gap: 24,
-                    }}
-                  >
-                    {/* Title */}
-                    <motion.div variants={sceneRowVariants} style={{ width: '100%' }}>
-                      <div
-                        style={{
-                          width: '100%',
-                          display: 'inline-flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: 10,
-                          textAlign: 'center',
-                        }}
-                      >
-                        <div
-                          style={{
-                            color: 'black',
-                            fontSize: 22,
-                            fontFamily: PINGFANG,
-                            fontWeight: 600,
-                          }}
-                        >
-                          放置你的首件物品
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* Description + image */}
-                    <motion.div variants={sceneRowVariants}>
-                      <div
-                        style={{
-                          width: CASE_PAGE_WIDTH,
-                          display: 'inline-flex',
-                          flexDirection: 'column',
-                          justifyContent: 'flex-start',
-                          alignItems: 'center',
-                          gap: 24,
-                        }}
-                      >
-                        <div
-                          style={{
-                            alignSelf: 'stretch',
-                            color: 'rgba(0, 0, 0, 0.50)',
-                            fontSize: 15,
-                            fontFamily: PINGFANG,
-                            fontWeight: 400,
-                            lineHeight: '22px',
-                          }}
-                        >
-                          上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。
-                        </div>
-
-                        <img
-                          src={publicAsset(selectedCase.image)}
-                          alt=""
-                          style={{
-                            width: CASE_IMAGE_SIZE,
-                            height: CASE_IMAGE_SIZE,
-                            display: 'block',
-                            pointerEvents: 'none',
-                            userSelect: 'none',
-                          }}
-                          draggable={false}
-                        />
-                      </div>
-                    </motion.div>
-
-                    {/* Footnote */}
-                    <motion.div variants={sceneRowVariants} style={{ width: '100%' }}>
-                      <div
-                        style={{
-                          width: '100%',
-                          display: 'inline-flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          gap: 10,
-                          textAlign: 'center',
-                        }}
-                      >
-                        <div
-                          style={{
-                            color: 'rgba(0, 0, 0, 0.30)',
-                            fontSize: 15,
-                            fontFamily: PINGFANG,
-                            fontWeight: 400,
-                            textAlign: 'center',
-                          }}
-                        >
-                          *Catlien也会将喜爱的物品放在这里。
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  {/* Upload button */}
-                  <motion.div variants={sceneRowVariants}>
-                    <button
-                      type="button"
-                      onClick={handlePrimaryAction}
-                      className="active:scale-[0.98] transition-transform"
-                      style={{
-                        width: 370,
-                        height: 52,
-                        paddingLeft: 20,
-                        paddingRight: 20,
-                        paddingTop: 6,
-                        paddingBottom: 6,
-                        position: 'relative',
-                        borderRadius: 1000,
-                        display: 'inline-flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        gap: 4,
-                        border: 0,
-                        background: '#0088FF',
-                        boxShadow: '0px 8px 40px rgba(0, 0, 0, 0.12)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: 36,
-                          borderRadius: 100,
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <div
-                          style={{
-                            textAlign: 'center',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            color: 'white',
-                            fontSize: 17,
-                            fontFamily: PINGFANG,
-                            fontWeight: 500,
-                          }}
-                        >
-                          上传图片
-                        </div>
-                      </div>
-                    </button>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  *Catlien也会将喜爱的物品放在这里。
+                </div>
+              </div>
+            </FloatInItem>
           </div>
+
+          <FloatInItem index={3} kind="item">
+            <PrimaryButton label="确定" onClick={handleConfirm} />
+          </FloatInItem>
         </FloatInGroup>
-      </motion.div>
-    </>
+      </div>
+    </ShowcaseSheetShell>
   )
 }
 
+/* ── Sheet 2: Place first item ── */
+function PlaceFirstItemSheet({
+  selectedCaseIndex,
+  onClose,
+  onUpload,
+}: {
+  selectedCaseIndex: number
+  onClose: () => void
+  onUpload: () => void
+}) {
+  const selectedCase = DISPLAY_CASES[selectedCaseIndex]
+
+  return (
+    <ShowcaseSheetShell onClose={onClose}>
+      <div
+        style={{
+          alignSelf: 'stretch',
+          paddingBottom: 36,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          gap: 40,
+        }}
+      >
+        <FloatInGroup startDelay={160} resetKey="place-first-item-sheet-content" step={0.16}>
+          <div
+            style={{
+              alignSelf: 'stretch',
+              paddingLeft: 32,
+              paddingRight: 32,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              gap: 24,
+            }}
+          >
+            {/* Title */}
+            <FloatInItem index={0} kind="item" style={{ width: '100%' }}>
+              <div
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 10,
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    color: 'black',
+                    fontSize: 22,
+                    fontFamily: PINGFANG,
+                    fontWeight: 600,
+                  }}
+                >
+                  放置你的首件物品
+                </div>
+              </div>
+            </FloatInItem>
+
+            {/* Description + image */}
+            <FloatInItem index={1} kind="item">
+              <div
+                style={{
+                  width: 338,
+                  display: 'inline-flex',
+                  flexDirection: 'column',
+                  justifyContent: 'flex-start',
+                  alignItems: 'center',
+                  gap: 24,
+                }}
+              >
+                <div
+                  style={{
+                    alignSelf: 'stretch',
+                    color: 'rgba(0, 0, 0, 0.50)',
+                    fontSize: 15,
+                    fontFamily: PINGFANG,
+                    fontWeight: 400,
+                    lineHeight: '22px',
+                  }}
+                >
+                  上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。
+                </div>
+
+                <img
+                  src={publicAsset(selectedCase.image)}
+                  alt=""
+                  style={{
+                    width: 322,
+                    height: 322,
+                    display: 'block',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}
+                  draggable={false}
+                />
+              </div>
+            </FloatInItem>
+
+            {/* Footnote */}
+            <FloatInItem index={2} kind="item" style={{ width: '100%' }}>
+              <div
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 10,
+                  textAlign: 'center',
+                }}
+              >
+                <div
+                  style={{
+                    color: 'rgba(0, 0, 0, 0.30)',
+                    fontSize: 15,
+                    fontFamily: PINGFANG,
+                    fontWeight: 400,
+                    textAlign: 'center',
+                  }}
+                >
+                  *Catlien也会将喜爱的物品放在这里。
+                </div>
+              </div>
+            </FloatInItem>
+          </div>
+
+          <FloatInItem index={3} kind="item">
+            <PrimaryButton label="上传图片" onClick={onUpload} />
+          </FloatInItem>
+        </FloatInGroup>
+      </div>
+    </ShowcaseSheetShell>
+  )
+}
+
+/* ── Main collection page ── */
 export default function CollectionWaterfallPage({
   onBack,
   onOpenGallery,
@@ -672,7 +575,12 @@ export default function CollectionWaterfallPage({
   const rubberOffsetRef = useRef(0)
   const rubberReturnRef = useRef<number | null>(null)
 
-  const [createSheetOpen, setCreateSheetOpen] = useState(false)
+  const [showcaseSheetMode, setShowcaseSheetMode] = useState<'choose' | 'place' | null>(null)
+  const [selectedDisplayCaseIndex, setSelectedDisplayCaseIndex] = useState(0)
+
+  const closeShowcaseSheet = useCallback(() => {
+    setShowcaseSheetMode(null)
+  }, [])
 
   const dragRef = useRef({
     active: false,
@@ -892,7 +800,7 @@ export default function CollectionWaterfallPage({
       cancelMomentum()
       cancelRubberReturn()
       setRubberOffset(0)
-      setCreateSheetOpen(true)
+      setShowcaseSheetMode('choose')
       return
     }
 
@@ -1474,12 +1382,40 @@ export default function CollectionWaterfallPage({
         </div>
       </div>
 
+      {/* Backdrop — independent, doesn't flash during sheet switch */}
       <AnimatePresence>
-        {createSheetOpen && (
-          <CreateShowcaseSheet
-            key="create-showcase-sheet"
-            onClose={() => setCreateSheetOpen(false)}
-            onOpenGallery={onOpenGallery}
+        {showcaseSheetMode && (
+          <motion.div
+            key="showcase-sheet-backdrop"
+            className="absolute inset-0 bg-black/50 z-20"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.5 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={closeShowcaseSheet}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Two sheets — mode="wait" for exit→enter dance */}
+      <AnimatePresence mode="wait">
+        {showcaseSheetMode === 'choose' && (
+          <ChooseShowcaseSheet
+            key="choose-showcase-sheet"
+            onClose={closeShowcaseSheet}
+            onConfirm={(index) => {
+              setSelectedDisplayCaseIndex(index)
+              setShowcaseSheetMode('place')
+            }}
+          />
+        )}
+
+        {showcaseSheetMode === 'place' && (
+          <PlaceFirstItemSheet
+            key="place-first-item-sheet"
+            selectedCaseIndex={selectedDisplayCaseIndex}
+            onClose={closeShowcaseSheet}
+            onUpload={onOpenGallery}
           />
         )}
       </AnimatePresence>
