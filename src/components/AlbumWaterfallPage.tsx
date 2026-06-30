@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent, type PointerEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { FloatInGroup, FloatInItem } from './FloatIn'
 
@@ -315,6 +315,24 @@ export default function AlbumWaterfallPage({
     momentumRef.current = requestAnimationFrame(step)
   }, [getMaxScroll, resetRubberOffset])
 
+  const openPolaroidPreview = useCallback((cardId: number | null | undefined) => {
+    if (cardId == null) return
+
+    const card = cardsById.get(cardId)
+    if (!card) return
+
+    cancelMomentum()
+    cancelRubberReturn()
+    setRubberOffset(0)
+
+    setPreviewCard({
+      id: card.id,
+      color: card.color,
+      src: card.src,
+      rotation: card.rotation,
+    })
+  }, [cardsById, cancelMomentum, cancelRubberReturn, setRubberOffset])
+
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
@@ -413,18 +431,12 @@ export default function AlbumWaterfallPage({
     dragRef.current.moved = false
 
     if (tappedCard) {
-      cancelMomentum()
-      cancelRubberReturn()
-      setRubberOffset(0)
+      suppressPreviewClickRef.current = true
+      window.setTimeout(() => {
+        suppressPreviewClickRef.current = false
+      }, 350)
 
-      setPreviewCard({
-        id: tappedCard.id,
-        color: tappedCard.color,
-        src: tappedCard.src,
-        rotation: tappedCard.rotation,
-      })
-
-      suppressPreviewClickRef.current = false
+      openPolaroidPreview(tappedCard.id)
       return
     }
 
@@ -453,9 +465,7 @@ export default function AlbumWaterfallPage({
     startMomentum,
     getMaxScroll,
     cardsById,
-    cancelMomentum,
-    cancelRubberReturn,
-    setRubberOffset,
+    openPolaroidPreview,
   ])
 
   useEffect(() => {
@@ -528,6 +538,20 @@ export default function AlbumWaterfallPage({
         onPointerUp={stopDrag}
         onPointerCancel={stopDrag}
         onLostPointerCapture={stopDrag}
+        onClick={(e) => {
+          if (suppressPreviewClickRef.current) {
+            suppressPreviewClickRef.current = false
+            return
+          }
+          const target = e.target as HTMLElement
+          if (target.closest('button, a, input, textarea, select')) return
+          const cardEl = target.closest<HTMLElement>('[data-polaroid-card-id]')
+          if (!cardEl) return
+          const value = cardEl.dataset.polaroidCardId
+          const cardId = value == null ? null : Number(value)
+          if (!Number.isFinite(cardId)) return
+          openPolaroidPreview(cardId)
+        }}
       >
         <div
           ref={contentRef}

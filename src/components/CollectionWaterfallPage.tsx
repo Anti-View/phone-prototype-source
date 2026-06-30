@@ -439,6 +439,7 @@ export default function CollectionWaterfallPage({
   const rubberReturnRef = useRef<number | null>(null)
 
   const [chooseSheetOpen, setChooseSheetOpen] = useState(false)
+  const suppressCreateShowcaseClickRef = useRef(false)
 
   const closeShowcaseSheet = useCallback(() => {
     setChooseSheetOpen(false)
@@ -569,6 +570,13 @@ export default function CollectionWaterfallPage({
     momentumRef.current = requestAnimationFrame(step)
   }, [getMaxScroll, resetRubberOffset])
 
+  const openChooseShowcaseSheet = useCallback(() => {
+    cancelMomentum()
+    cancelRubberReturn()
+    setRubberOffset(0)
+    setChooseSheetOpen(true)
+  }, [cancelMomentum, cancelRubberReturn, setRubberOffset])
+
   const handlePointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
@@ -659,10 +667,12 @@ export default function CollectionWaterfallPage({
     dragRef.current.tapCreateShowcase = false
 
     if (wasCreateShowcaseTap) {
-      cancelMomentum()
-      cancelRubberReturn()
-      setRubberOffset(0)
-      setChooseSheetOpen(true)
+      suppressCreateShowcaseClickRef.current = true
+      window.setTimeout(() => {
+        suppressCreateShowcaseClickRef.current = false
+      }, 350)
+
+      openChooseShowcaseSheet()
       return
     }
 
@@ -682,7 +692,7 @@ export default function CollectionWaterfallPage({
         startMomentum(releaseVelocity)
       }
     }
-  }, [resetRubberOffset, startMomentum, getMaxScroll, cancelMomentum, cancelRubberReturn, setRubberOffset])
+  }, [resetRubberOffset, startMomentum, getMaxScroll, openChooseShowcaseSheet])
 
   useEffect(() => {
     return () => {
@@ -709,6 +719,17 @@ export default function CollectionWaterfallPage({
         onPointerUp={stopDrag}
         onPointerCancel={stopDrag}
         onLostPointerCapture={stopDrag}
+        onClick={(e) => {
+          if (suppressCreateShowcaseClickRef.current) {
+            suppressCreateShowcaseClickRef.current = false
+            return
+          }
+          const target = e.target as HTMLElement
+          if (target.closest('button, a, input, textarea, select')) return
+          const createCard = target.closest('[data-create-showcase-card]') as HTMLElement | null
+          if (!createCard) return
+          openChooseShowcaseSheet()
+        }}
       >
         <div
           ref={contentRef}

@@ -4,6 +4,7 @@ import {
   useRef,
   useEffect,
   type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent,
   type ReactNode,
 } from 'react'
@@ -303,6 +304,8 @@ export default function App() {
   const diaryRubberOffsetRef = useRef(0)
   const diaryRubberReturnRef = useRef<number | null>(null)
 
+  const suppressDiaryClickRef = useRef(false)
+
   const diaryDragRef = useRef({
     active: false,
     pointerId: -1,
@@ -429,6 +432,18 @@ export default function App() {
     diaryMomentumRef.current = requestAnimationFrame(step)
   }, [getMaxScroll, resetDiaryRubberOffset])
 
+  const openDiaryEntryById = useCallback((entryId: string | null | undefined) => {
+    if (!entryId) return
+
+    const entry = diaryEntries[entryId]
+    if (!entry) return
+
+    cancelDiaryMomentum()
+    cancelDiaryRubberReturn()
+    setDiaryRubberOffset(0)
+    setSelectedDiaryEntry(entry)
+  }, [cancelDiaryMomentum, cancelDiaryRubberReturn, setDiaryRubberOffset])
+
   const handleDiaryPointerDown = useCallback((e: PointerEvent<HTMLDivElement>) => {
     if (e.pointerType !== 'mouse') return
     if (e.button !== 0) return
@@ -521,13 +536,12 @@ export default function App() {
     diaryDragRef.current.moved = false
 
     if (wasTap && tappedEntryId) {
-      const entry = diaryEntries[tappedEntryId]
-      if (entry) {
-        cancelDiaryMomentum()
-        cancelDiaryRubberReturn()
-        setDiaryRubberOffset(0)
-        setSelectedDiaryEntry(entry)
-      }
+      suppressDiaryClickRef.current = true
+      window.setTimeout(() => {
+        suppressDiaryClickRef.current = false
+      }, 350)
+
+      openDiaryEntryById(tappedEntryId)
       return
     }
 
@@ -676,6 +690,17 @@ export default function App() {
               onPointerUp={stopDiaryDrag}
               onPointerCancel={stopDiaryDrag}
               onLostPointerCapture={stopDiaryDrag}
+              onClick={(e) => {
+                if (suppressDiaryClickRef.current) {
+                  suppressDiaryClickRef.current = false
+                  return
+                }
+                const target = e.target as HTMLElement
+                if (target.closest('button, a, input, textarea, select')) return
+                const card = target.closest('[data-diary-entry-id]') as HTMLElement | null
+                if (!card) return
+                openDiaryEntryById(card.dataset.diaryEntryId)
+              }}
             >
               <div
                 ref={diaryContentRef}
