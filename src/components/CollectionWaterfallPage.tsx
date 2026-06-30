@@ -31,20 +31,29 @@ const DISPLAY_CASES = [
 function ShowcaseSheetShell({
   children,
   onClose,
+  zIndex = 30,
+  exitMode = 'down',
 }: {
   children: ReactNode
   onClose: () => void
+  zIndex?: number
+  exitMode?: 'down' | 'fade'
 }) {
   return (
     <motion.div
-      className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
+      className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] flex flex-col items-center overflow-hidden"
       style={{
+        zIndex,
         boxShadow: SHEET_SHADOW,
         fontFamily: 'var(--font-ui)',
       }}
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
-      exit={{ y: '100%' }}
+      exit={
+        exitMode === 'fade'
+          ? { opacity: 0, y: 24, filter: 'blur(4px)' }
+          : { y: '100%' }
+      }
       transition={{
         type: 'spring',
         damping: 28,
@@ -264,7 +273,7 @@ function ChooseShowcaseSheet({
   }, [selectedCaseIndex, snapToShowcaseCase, onConfirm])
 
   return (
-    <ShowcaseSheetShell onClose={onClose}>
+    <ShowcaseSheetShell onClose={onClose} zIndex={30} exitMode="fade">
       <div
         style={{
           alignSelf: 'stretch',
@@ -435,7 +444,7 @@ function PlaceFirstItemSheet({
   const selectedCase = DISPLAY_CASES[selectedCaseIndex]
 
   return (
-    <ShowcaseSheetShell onClose={onClose}>
+    <ShowcaseSheetShell onClose={onClose} zIndex={40}>
       <div
         style={{
           alignSelf: 'stretch',
@@ -575,11 +584,13 @@ export default function CollectionWaterfallPage({
   const rubberOffsetRef = useRef(0)
   const rubberReturnRef = useRef<number | null>(null)
 
-  const [showcaseSheetMode, setShowcaseSheetMode] = useState<'choose' | 'place' | null>(null)
+  const [chooseSheetOpen, setChooseSheetOpen] = useState(false)
+  const [placeSheetOpen, setPlaceSheetOpen] = useState(false)
   const [selectedDisplayCaseIndex, setSelectedDisplayCaseIndex] = useState(0)
 
   const closeShowcaseSheet = useCallback(() => {
-    setShowcaseSheetMode(null)
+    setChooseSheetOpen(false)
+    setPlaceSheetOpen(false)
   }, [])
 
   const dragRef = useRef({
@@ -800,7 +811,9 @@ export default function CollectionWaterfallPage({
       cancelMomentum()
       cancelRubberReturn()
       setRubberOffset(0)
-      setShowcaseSheetMode('choose')
+      setSelectedDisplayCaseIndex(0)
+      setChooseSheetOpen(true)
+      setPlaceSheetOpen(false)
       return
     }
 
@@ -1382,9 +1395,9 @@ export default function CollectionWaterfallPage({
         </div>
       </div>
 
-      {/* Backdrop — independent, doesn't flash during sheet switch */}
+      {/* Backdrop — stays through sheet overlap */}
       <AnimatePresence>
-        {showcaseSheetMode && (
+        {(chooseSheetOpen || placeSheetOpen) && (
           <motion.div
             key="showcase-sheet-backdrop"
             className="absolute inset-0 bg-black/50 z-20"
@@ -1397,25 +1410,35 @@ export default function CollectionWaterfallPage({
         )}
       </AnimatePresence>
 
-      {/* Two sheets — mode="wait" for exit→enter dance */}
-      <AnimatePresence mode="wait">
-        {showcaseSheetMode === 'choose' && (
+      {/* Choose sheet — lower layer, fades on exit */}
+      <AnimatePresence>
+        {chooseSheetOpen && (
           <ChooseShowcaseSheet
             key="choose-showcase-sheet"
             onClose={closeShowcaseSheet}
             onConfirm={(index) => {
               setSelectedDisplayCaseIndex(index)
-              setShowcaseSheetMode('place')
+              setPlaceSheetOpen(true)
+
+              window.setTimeout(() => {
+                setChooseSheetOpen(false)
+              }, 120)
             }}
           />
         )}
+      </AnimatePresence>
 
-        {showcaseSheetMode === 'place' && (
+      {/* Place sheet — higher layer, slides in over choose sheet */}
+      <AnimatePresence>
+        {placeSheetOpen && (
           <PlaceFirstItemSheet
             key="place-first-item-sheet"
             selectedCaseIndex={selectedDisplayCaseIndex}
             onClose={closeShowcaseSheet}
-            onUpload={onOpenGallery}
+            onUpload={() => {
+              closeShowcaseSheet()
+              onOpenGallery()
+            }}
           />
         )}
       </AnimatePresence>
