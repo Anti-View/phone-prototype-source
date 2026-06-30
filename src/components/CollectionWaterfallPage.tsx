@@ -227,14 +227,15 @@ function CreateShowcaseSheet({
               }}
             >
               {/* Title */}
-              <FloatInItem index={1} kind="item" style={{ alignSelf: 'stretch' }}>
+              <FloatInItem index={1} kind="item" style={{ width: '100%' }}>
                 <div
                   style={{
-                    alignSelf: 'stretch',
+                    width: '100%',
                     display: 'inline-flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                     gap: 10,
+                    textAlign: 'center',
                   }}
                 >
                   <div
@@ -323,14 +324,15 @@ function CreateShowcaseSheet({
               </FloatInItem>
 
               {/* Footnote */}
-              <FloatInItem index={3} kind="item" style={{ alignSelf: 'stretch' }}>
+              <FloatInItem index={3} kind="item" style={{ width: '100%' }}>
                 <div
                   style={{
-                    alignSelf: 'stretch',
+                    width: '100%',
                     display: 'inline-flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                     gap: 10,
+                    textAlign: 'center',
                   }}
                 >
                   <div
@@ -339,6 +341,7 @@ function CreateShowcaseSheet({
                       fontSize: 15,
                       fontFamily: PINGFANG,
                       fontWeight: 400,
+                      textAlign: 'center',
                     }}
                   >
                     *Catlien也会将喜爱的物品放在这里。
