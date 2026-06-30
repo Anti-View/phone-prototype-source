@@ -31,29 +31,20 @@ const DISPLAY_CASES = [
 function ShowcaseSheetShell({
   children,
   onClose,
-  zIndex = 30,
-  exitMode = 'down',
 }: {
   children: ReactNode
   onClose: () => void
-  zIndex?: number
-  exitMode?: 'down' | 'fade'
 }) {
   return (
     <motion.div
-      className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] flex flex-col items-center overflow-hidden"
+      className="absolute left-0 top-[188px] w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
       style={{
-        zIndex,
         boxShadow: SHEET_SHADOW,
         fontFamily: 'var(--font-ui)',
       }}
       initial={{ y: '100%' }}
       animate={{ y: 0 }}
-      exit={
-        exitMode === 'fade'
-          ? { opacity: 0, y: 24, filter: 'blur(4px)' }
-          : { y: '100%' }
-      }
+      exit={{ y: '100%' }}
       transition={{
         type: 'spring',
         damping: 28,
@@ -431,149 +422,13 @@ function ChooseShowcaseSheet({
   )
 }
 
-/* ── Sheet 2: Place first item ── */
-function PlaceFirstItemSheet({
-  selectedCaseIndex,
-  onClose,
-  onUpload,
-}: {
-  selectedCaseIndex: number
-  onClose: () => void
-  onUpload: () => void
-}) {
-  const selectedCase = DISPLAY_CASES[selectedCaseIndex]
-
-  return (
-    <ShowcaseSheetShell onClose={onClose}>
-      <div
-        style={{
-          alignSelf: 'stretch',
-          paddingBottom: 36,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-          gap: 40,
-        }}
-      >
-        <FloatInGroup startDelay={160} resetKey="place-first-item-sheet-content" step={0.16}>
-          <div
-            style={{
-              alignSelf: 'stretch',
-              paddingLeft: 32,
-              paddingRight: 32,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'flex-start',
-              gap: 24,
-            }}
-          >
-            <FloatInItem index={0} kind="item" style={{ width: '100%' }}>
-              <div
-                style={{
-                  width: '100%',
-                  display: 'inline-flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 10,
-                  textAlign: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    color: 'black',
-                    fontSize: 22,
-                    fontFamily: PINGFANG,
-                    fontWeight: 600,
-                  }}
-                >
-                  放置你的首件物品
-                </div>
-              </div>
-            </FloatInItem>
-
-            <FloatInItem index={1} kind="item">
-              <div
-                style={{
-                  width: 338,
-                  display: 'inline-flex',
-                  flexDirection: 'column',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: 24,
-                }}
-              >
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 15,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
-                    lineHeight: '22px',
-                  }}
-                >
-                  上传图片，HarmonyOS Vision 会将其转化为可放入展柜的立体模型。
-                </div>
-
-                <img
-                  src={publicAsset(selectedCase.image)}
-                  alt=""
-                  style={{
-                    width: 322,
-                    height: 322,
-                    display: 'block',
-                    pointerEvents: 'none',
-                    userSelect: 'none',
-                  }}
-                  draggable={false}
-                />
-              </div>
-            </FloatInItem>
-
-            <FloatInItem index={2} kind="item" style={{ width: '100%' }}>
-              <div
-                style={{
-                  width: '100%',
-                  display: 'inline-flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 10,
-                  textAlign: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.30)',
-                    fontSize: 15,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
-                    textAlign: 'center',
-                  }}
-                >
-                  *Catlien也会将喜爱的物品放在这里。
-                </div>
-              </div>
-            </FloatInItem>
-          </div>
-
-          <FloatInItem index={3} kind="item">
-            <PrimaryButton label="上传图片" onClick={onUpload} />
-          </FloatInItem>
-        </FloatInGroup>
-      </div>
-    </ShowcaseSheetShell>
-  )
-}
-
 /* ── Main collection page ── */
 export default function CollectionWaterfallPage({
   onBack,
-  onOpenGalleryForCase,
+  onConfirmDisplayCase,
 }: {
   onBack: () => void
-  onOpenGalleryForCase: (selectedCaseIndex: number) => void
+  onConfirmDisplayCase: (selectedCaseIndex: number) => void
 }) {
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
@@ -581,11 +436,10 @@ export default function CollectionWaterfallPage({
   const rubberOffsetRef = useRef(0)
   const rubberReturnRef = useRef<number | null>(null)
 
-  const [showcaseSheetMode, setShowcaseSheetMode] = useState<'choose' | 'place' | null>(null)
-  const [selectedDisplayCaseIndex, setSelectedDisplayCaseIndex] = useState(0)
+  const [chooseSheetOpen, setChooseSheetOpen] = useState(false)
 
   const closeShowcaseSheet = useCallback(() => {
-    setShowcaseSheetMode(null)
+    setChooseSheetOpen(false)
   }, [])
 
   const dragRef = useRef({
@@ -806,8 +660,7 @@ export default function CollectionWaterfallPage({
       cancelMomentum()
       cancelRubberReturn()
       setRubberOffset(0)
-      setSelectedDisplayCaseIndex(0)
-      setShowcaseSheetMode('choose')
+      setChooseSheetOpen(true)
       return
     }
 
@@ -1391,7 +1244,7 @@ export default function CollectionWaterfallPage({
 
       {/* Backdrop */}
       <AnimatePresence>
-        {showcaseSheetMode && (
+        {chooseSheetOpen && (
           <motion.div
             key="showcase-sheet-backdrop"
             className="absolute inset-0 bg-black/50 z-20"
@@ -1404,27 +1257,15 @@ export default function CollectionWaterfallPage({
         )}
       </AnimatePresence>
 
-      {/* Sheets — mode="wait": choose exits, place enters */}
-      <AnimatePresence mode="wait">
-        {showcaseSheetMode === 'choose' && (
+      {/* Choose showcase sheet */}
+      <AnimatePresence>
+        {chooseSheetOpen && (
           <ChooseShowcaseSheet
             key="choose-showcase-sheet"
             onClose={closeShowcaseSheet}
             onConfirm={(index) => {
-              setSelectedDisplayCaseIndex(index)
-              setShowcaseSheetMode('place')
-            }}
-          />
-        )}
-
-        {showcaseSheetMode === 'place' && (
-          <PlaceFirstItemSheet
-            key="place-first-item-sheet"
-            selectedCaseIndex={selectedDisplayCaseIndex}
-            onClose={closeShowcaseSheet}
-            onUpload={() => {
-              setShowcaseSheetMode(null)
-              onOpenGalleryForCase(selectedDisplayCaseIndex)
+              setChooseSheetOpen(false)
+              onConfirmDisplayCase(index)
             }}
           />
         )}

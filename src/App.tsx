@@ -23,6 +23,7 @@ import { useAppState } from './hooks/useAppState'
 import DiaryDetailSheet from './components/DiaryDetailSheet'
 import AlbumWaterfallPage from './components/AlbumWaterfallPage'
 import CollectionWaterfallPage from './components/CollectionWaterfallPage'
+import CollectionPlaceFirstItemSheet from './components/CollectionPlaceFirstItemSheet'
 import CollectionItemResultSheet from './components/CollectionItemResultSheet'
 import { FloatInGroup, FloatInItem } from './components/FloatIn'
 import type { DiaryEntry } from './types/diary'
@@ -157,6 +158,7 @@ export default function App() {
   const [toastKey, setToastKey] = useState(0)
   const [albumPhotos, setAlbumPhotos] = useState<string[]>([])
   const [collectionGalleryOpen, setCollectionGalleryOpen] = useState(false)
+  const [collectionPlaceOpen, setCollectionPlaceOpen] = useState(false)
   const [collectionLoadingOpen, setCollectionLoadingOpen] = useState(false)
   const [collectionResultOpen, setCollectionResultOpen] = useState(false)
   const [collectionSelectedCaseIndex, setCollectionSelectedCaseIndex] = useState(0)
@@ -195,10 +197,16 @@ export default function App() {
     setTimeout(() => setToastVisible(false), 2500)
   }, [])
 
-  const openCollectionGalleryForCase = useCallback((selectedCaseIndex: number) => {
+  const openCollectionPlaceForCase = useCallback((selectedCaseIndex: number) => {
     setCollectionSelectedCaseIndex(selectedCaseIndex)
-    setCollectionResultOpen(false)
+    setCollectionPlaceOpen(true)
+    setCollectionGalleryOpen(false)
     setCollectionLoadingOpen(false)
+    setCollectionResultOpen(false)
+  }, [])
+
+  const openCollectionGalleryFromPlace = useCallback(() => {
+    setCollectionPlaceOpen(false)
     setCollectionGalleryOpen(true)
   }, [])
 
@@ -836,9 +844,21 @@ export default function App() {
           >
             <CollectionWaterfallPage
               onBack={goToDesktop}
-              onOpenGalleryForCase={openCollectionGalleryForCase}
+              onConfirmDisplayCase={openCollectionPlaceForCase}
             />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Collection place first item sheet ── */}
+      <AnimatePresence>
+        {collectionPlaceOpen && (
+          <CollectionPlaceFirstItemSheet
+            key="collection-place-first-item-sheet"
+            selectedCaseImage={COLLECTION_DISPLAY_CASE_IMAGES[collectionSelectedCaseIndex]}
+            onClose={() => setCollectionPlaceOpen(false)}
+            onUpload={openCollectionGalleryFromPlace}
+          />
         )}
       </AnimatePresence>
 
