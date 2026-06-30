@@ -513,7 +513,7 @@ export default function CollectionWaterfallPage({
                   boxShadow: GLASS_CARD_SHADOW,
                   borderRadius: 1000,
                   display: 'flex',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
                   alignItems: 'center',
                 }}
               >
@@ -706,7 +706,7 @@ export default function CollectionWaterfallPage({
                   boxShadow: GLASS_CARD_SHADOW,
                   borderRadius: 1000,
                   display: 'flex',
-                  justifyContent: 'space-between',
+                  justifyContent: 'center',
                   alignItems: 'center',
                 }}
               >
