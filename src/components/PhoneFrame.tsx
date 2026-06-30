@@ -112,7 +112,6 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
           />
 
           <div
-            className="rounded-[64px] overflow-hidden bg-white relative"
             style={{
               position: 'absolute',
               left: phoneLeft,
@@ -122,9 +121,43 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
               zIndex: 1,
               borderRadius: 64,
               boxShadow: '0 0 0 12px rgba(255, 255, 255, 0.50)',
+              background: '#FFFFFF',
+              isolation: 'isolate',
+              transform: 'translateZ(0)',
+              WebkitTransform: 'translateZ(0)',
             }}
           >
-            {children}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                width: PHONE_WIDTH,
+                height: PHONE_HEIGHT,
+                borderRadius: 64,
+                overflow: 'hidden',
+                background: '#FFFFFF',
+                clipPath: 'inset(0 round 64px)',
+                WebkitClipPath: 'inset(0 round 64px)',
+                transform: 'translateZ(0)',
+                WebkitTransform: 'translateZ(0)',
+                backfaceVisibility: 'hidden',
+                WebkitBackfaceVisibility: 'hidden',
+              }}
+            >
+              {children}
+            </div>
+
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                inset: 0,
+                borderRadius: 64,
+                pointerEvents: 'none',
+                zIndex: 2,
+                boxShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.95)',
+              }}
+            />
           </div>
         </div>
       </div>
