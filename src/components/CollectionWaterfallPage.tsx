@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'rea
 import { AnimatePresence, motion } from 'framer-motion'
 import NavBar from './NavBar'
 import { publicAsset } from '../utils/assets'
+import { FloatInGroup, FloatInItem } from './FloatIn'
 
 const SF = "'SF Pro Display', 'SF Pro', -apple-system"
 const PINGFANG = "'PingFang SC', sans-serif"
@@ -370,504 +371,526 @@ export default function CollectionWaterfallPage({
             willChange: 'transform',
           }}
         >
-          {/* ── Showcase 1 ── */}
-          <div
-            style={{
-              width: 362,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 24,
-            }}
-          >
+          <FloatInGroup startDelay={100} resetKey="collection-waterfall" step={0.14}>
+            {/* ── Showcase 1 ── */}
             <div
               style={{
-                alignSelf: 'stretch',
+                width: 362,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 16,
+                alignItems: 'center',
+                gap: 24,
               }}
             >
-              <div
-                style={{
-                  display: 'inline-flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.90)',
-                    fontSize: 28,
-                    fontFamily: PINGFANG,
-                    fontWeight: 600,
-                  }}
-                >
-                  Showcase 1
-                </div>
-              </div>
-
               <div
                 style={{
                   alignSelf: 'stretch',
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 16,
-                  display: 'inline-flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 16,
                 }}
               >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.80)',
-                    fontSize: 14,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
-                  }}
-                >
-                  Calien新增了一个物件：我的正面照
-                </div>
+                <FloatInItem index={0} kind="item">
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.90)',
+                        fontSize: 28,
+                        fontFamily: PINGFANG,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Showcase 1
+                    </div>
+                  </div>
+                </FloatInItem>
 
+                <FloatInItem index={1} kind="card" style={{ alignSelf: 'stretch' }}>
+                  <div
+                    style={{
+                      alignSelf: 'stretch',
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 16,
+                      display: 'inline-flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.80)',
+                        fontSize: 14,
+                        fontFamily: PINGFANG,
+                        fontWeight: 400,
+                      }}
+                    >
+                      Calien新增了一个物件：我的正面照
+                    </div>
+
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 14,
+                        fontFamily: PINGFANG,
+                        fontWeight: 400,
+                      }}
+                    >
+                      刚刚
+                    </div>
+                  </div>
+                </FloatInItem>
+              </div>
+
+              <FloatInItem index={2} kind="image">
+                <img
+                  src={publicAsset('img/展柜_成品.png')}
+                  alt=""
+                  style={{
+                    width: 362,
+                    height: 362,
+                    display: 'block',
+                  }}
+                  draggable={false}
+                />
+              </FloatInItem>
+
+              <FloatInItem index={3} kind="item">
                 <div
                   style={{
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 14,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
+                    display: 'inline-flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 16,
                   }}
                 >
-                  刚刚
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 1000,
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        alignSelf: 'stretch',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 16,
+                        fontFamily: SF,
+                        fontWeight: 400,
+                      }}
+                    >
+                      􀉞
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      width: 134,
+                      height: 56,
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 1000,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.90)',
+                        fontSize: 16,
+                        fontFamily: PINGFANG,
+                        fontWeight: 500,
+                      }}
+                    >
+                      编辑
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 1000,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 16,
+                        fontFamily: SF,
+                        fontWeight: 400,
+                      }}
+                    >
+                      􀰞
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </FloatInItem>
             </div>
 
-            <img
-              src={publicAsset('img/展柜_成品.png')}
-              alt=""
+            {/* ── Showcase 2 ── */}
+            <div
               style={{
                 width: 362,
-                height: 362,
-                display: 'block',
-              }}
-              draggable={false}
-            />
-
-            <div
-              style={{
-                display: 'inline-flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 1000,
-                  display: 'inline-flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 16,
-                    fontFamily: SF,
-                    fontWeight: 400,
-                  }}
-                >
-                  􀉞
-                </div>
-              </div>
-
-              <div
-                style={{
-                  width: 134,
-                  height: 56,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 1000,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.90)',
-                    fontSize: 16,
-                    fontFamily: PINGFANG,
-                    fontWeight: 500,
-                  }}
-                >
-                  编辑
-                </div>
-              </div>
-
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 1000,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 16,
-                    fontFamily: SF,
-                    fontWeight: 400,
-                  }}
-                >
-                  􀰞
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Showcase 2 ── */}
-          <div
-            style={{
-              width: 362,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 24,
-            }}
-          >
-            <div
-              style={{
-                alignSelf: 'stretch',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 16,
+                alignItems: 'center',
+                gap: 24,
               }}
             >
-              <div
-                style={{
-                  display: 'inline-flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.90)',
-                    fontSize: 28,
-                    fontFamily: PINGFANG,
-                    fontWeight: 600,
-                  }}
-                >
-                  Showcase 2
-                </div>
-              </div>
-
               <div
                 style={{
                   alignSelf: 'stretch',
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 16,
-                  display: 'inline-flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 16,
                 }}
               >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.80)',
-                    fontSize: 14,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
-                  }}
-                >
-                  Calien新增了一个物件：我的正面照
-                </div>
+                <FloatInItem index={4} kind="item">
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.90)',
+                        fontSize: 28,
+                        fontFamily: PINGFANG,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Showcase 2
+                    </div>
+                  </div>
+                </FloatInItem>
 
+                <FloatInItem index={5} kind="card" style={{ alignSelf: 'stretch' }}>
+                  <div
+                    style={{
+                      alignSelf: 'stretch',
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 16,
+                      display: 'inline-flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.80)',
+                        fontSize: 14,
+                        fontFamily: PINGFANG,
+                        fontWeight: 400,
+                      }}
+                    >
+                      Calien新增了一个物件：我的正面照
+                    </div>
+
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 14,
+                        fontFamily: PINGFANG,
+                        fontWeight: 400,
+                      }}
+                    >
+                      刚刚
+                    </div>
+                  </div>
+                </FloatInItem>
+              </div>
+
+              <FloatInItem index={6} kind="image">
+                <img
+                  src={publicAsset('img/洞洞板_成品.png')}
+                  alt=""
+                  style={{
+                    width: 362,
+                    height: 362,
+                    display: 'block',
+                  }}
+                  draggable={false}
+                />
+              </FloatInItem>
+
+              <FloatInItem index={7} kind="item">
                 <div
                   style={{
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 14,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
+                    display: 'inline-flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: 16,
                   }}
                 >
-                  刚刚
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 1000,
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        alignSelf: 'stretch',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 16,
+                        fontFamily: SF,
+                        fontWeight: 400,
+                      }}
+                    >
+                      􀉞
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      width: 134,
+                      height: 56,
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 1000,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.90)',
+                        fontSize: 16,
+                        fontFamily: PINGFANG,
+                        fontWeight: 500,
+                      }}
+                    >
+                      编辑
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      width: 56,
+                      height: 56,
+                      paddingLeft: 20,
+                      paddingRight: 20,
+                      paddingTop: 16,
+                      paddingBottom: 16,
+                      background: 'rgba(255, 255, 255, 0.40)',
+                      boxShadow: GLASS_CARD_SHADOW,
+                      borderRadius: 1000,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 16,
+                        fontFamily: SF,
+                        fontWeight: 400,
+                      }}
+                    >
+                      􀰞
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </FloatInItem>
             </div>
 
-            <img
-              src={publicAsset('img/洞洞板_成品.png')}
-              alt=""
+            {/* ── Showcase 3 ── */}
+            <div
               style={{
                 width: 362,
-                height: 362,
-                display: 'block',
-              }}
-              draggable={false}
-            />
-
-            <div
-              style={{
-                display: 'inline-flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 1000,
-                  display: 'inline-flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 16,
-                    fontFamily: SF,
-                    fontWeight: 400,
-                  }}
-                >
-                  􀉞
-                </div>
-              </div>
-
-              <div
-                style={{
-                  width: 134,
-                  height: 56,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 1000,
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.90)',
-                    fontSize: 16,
-                    fontFamily: PINGFANG,
-                    fontWeight: 500,
-                  }}
-                >
-                  编辑
-                </div>
-              </div>
-
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  paddingTop: 16,
-                  paddingBottom: 16,
-                  background: 'rgba(255, 255, 255, 0.40)',
-                  boxShadow: GLASS_CARD_SHADOW,
-                  borderRadius: 1000,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div
-                  style={{
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 16,
-                    fontFamily: SF,
-                    fontWeight: 400,
-                  }}
-                >
-                  􀰞
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Showcase 3 ── */}
-          <div
-            style={{
-              width: 362,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 24,
-            }}
-          >
-            <div
-              style={{
-                alignSelf: 'stretch',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 16,
+                alignItems: 'center',
+                gap: 24,
               }}
             >
               <div
                 style={{
-                  display: 'inline-flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    color: 'rgba(0, 0, 0, 0.90)',
-                    fontSize: 28,
-                    fontFamily: PINGFANG,
-                    fontWeight: 600,
-                  }}
-                >
-                  Showcase 3
-                </div>
-              </div>
-            </div>
-
-            <motion.div
-              data-create-showcase-card
-              style={{
-                width: 362,
-                height: 362,
-                position: 'relative',
-                cursor: 'pointer',
-                transformOrigin: 'center center',
-              }}
-              whileTap={{ scale: 0.98 }}
-              transition={{
-                type: 'spring',
-                stiffness: 520,
-                damping: 34,
-                mass: 0.6,
-              }}
-            >
-              <div
-                style={{
-                  width: 362,
-                  height: 362,
-                  left: 0,
-                  top: 0,
-                  position: 'absolute',
-                  borderRadius: 32,
-                  border: '1px dashed rgba(0, 0, 0, 0.15)',
-                }}
-              />
-
-              <div
-                style={{
-                  width: 127,
-                  left: 117,
-                  top: 150,
-                  position: 'absolute',
-                  display: 'inline-flex',
+                  alignSelf: 'stretch',
+                  display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: 8,
+                  alignItems: 'flex-start',
+                  gap: 16,
                 }}
               >
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    color: 'rgba(0, 0, 0, 0.50)',
-                    fontSize: 28,
-                    fontFamily: SF,
-                    fontWeight: 274,
-                  }}
-                >
-                  􀁌
-                </div>
-
-                <div
-                  style={{
-                    alignSelf: 'stretch',
-                    color: 'rgba(0, 0, 0, 0.80)',
-                    fontSize: 14,
-                    fontFamily: PINGFANG,
-                    fontWeight: 400,
-                  }}
-                >
-                  创建新的 Showcase
-                </div>
+                <FloatInItem index={8} kind="item">
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: 'rgba(0, 0, 0, 0.90)',
+                        fontSize: 28,
+                        fontFamily: PINGFANG,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Showcase 3
+                    </div>
+                  </div>
+                </FloatInItem>
               </div>
-            </motion.div>
-          </div>
+
+              <FloatInItem index={9} kind="card">
+                <motion.div
+                  data-create-showcase-card
+                  style={{
+                    width: 362,
+                    height: 362,
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transformOrigin: 'center center',
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{
+                    type: 'spring',
+                    stiffness: 520,
+                    damping: 34,
+                    mass: 0.6,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 362,
+                      height: 362,
+                      left: 0,
+                      top: 0,
+                      position: 'absolute',
+                      borderRadius: 32,
+                      border: '1px dashed rgba(0, 0, 0, 0.15)',
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      width: 127,
+                      left: 117,
+                      top: 150,
+                      position: 'absolute',
+                      display: 'inline-flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-start',
+                      alignItems: 'center',
+                      gap: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        alignSelf: 'stretch',
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        color: 'rgba(0, 0, 0, 0.50)',
+                        fontSize: 28,
+                        fontFamily: SF,
+                        fontWeight: 274,
+                      }}
+                    >
+                      􀁌
+                    </div>
+
+                    <div
+                      style={{
+                        alignSelf: 'stretch',
+                        color: 'rgba(0, 0, 0, 0.80)',
+                        fontSize: 14,
+                        fontFamily: PINGFANG,
+                        fontWeight: 400,
+                      }}
+                    >
+                      创建新的 Showcase
+                    </div>
+                  </div>
+                </motion.div>
+              </FloatInItem>
+            </div>
+          </FloatInGroup>
         </div>
       </div>
 
