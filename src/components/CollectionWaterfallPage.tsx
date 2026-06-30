@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, animate, motion, useMotionValue, type PanInfo } from 'framer-motion'
 import NavBar from './NavBar'
 import { publicAsset } from '../utils/assets'
 import { FloatInGroup, FloatInItem } from './FloatIn'
@@ -33,95 +33,48 @@ function CreateShowcaseSheet({
 }: {
   onClose: () => void
 }) {
+  const CASE_WIDTH = 322
+  const CASE_COUNT = DISPLAY_CASES.length
   const [selectedCaseIndex, setSelectedCaseIndex] = useState(0)
-  const carouselRef = useRef<HTMLDivElement | null>(null)
+  const carouselX = useMotionValue(0)
   const selectedCase = DISPLAY_CASES[selectedCaseIndex]
 
-  const carouselDragRef = useRef({
-    active: false,
-    pointerId: -1,
-    startX: 0,
-    startScrollLeft: 0,
-    moved: false,
-  })
+  const snapToCase = useCallback((index: number) => {
+    const target = Math.max(0, Math.min(CASE_COUNT - 1, index))
 
-  const snapCarouselToNearest = useCallback(() => {
-    const el = carouselRef.current
-    if (!el) return
+    setSelectedCaseIndex(target)
 
-    const nextIndex = Math.round(el.scrollLeft / 322)
-    const clampedIndex = Math.max(0, Math.min(DISPLAY_CASES.length - 1, nextIndex))
-
-    setSelectedCaseIndex(clampedIndex)
-
-    el.scrollTo({
-      left: clampedIndex * 322,
-      behavior: 'smooth',
+    animate(carouselX, -target * CASE_WIDTH, {
+      type: 'spring',
+      stiffness: 300,
+      damping: 28,
+      mass: 1,
     })
-  }, [])
+  }, [carouselX])
 
-  const handleCarouselScroll = useCallback(() => {
-    const el = carouselRef.current
-    if (!el) return
+  const handleCarouselDragEnd = useCallback(
+    (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const threshold = 48
+      const velocityThreshold = 450
 
-    const nextIndex = Math.round(el.scrollLeft / 322)
-    const clampedIndex = Math.max(0, Math.min(DISPLAY_CASES.length - 1, nextIndex))
+      let target = selectedCaseIndex
 
-    setSelectedCaseIndex(clampedIndex)
-  }, [])
+      if (
+        (info.offset.x < -threshold || info.velocity.x < -velocityThreshold) &&
+        selectedCaseIndex < CASE_COUNT - 1
+      ) {
+        target = selectedCaseIndex + 1
+      } else if (
+        (info.offset.x > threshold || info.velocity.x > velocityThreshold) &&
+        selectedCaseIndex > 0
+      ) {
+        target = selectedCaseIndex - 1
+      }
 
-  const handleCarouselPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== 'mouse') return
-    if (e.button !== 0) return
-
-    const el = carouselRef.current
-    if (!el) return
-
-    carouselDragRef.current = {
-      active: true,
-      pointerId: e.pointerId,
-      startX: e.clientX,
-      startScrollLeft: el.scrollLeft,
-      moved: false,
-    }
-
-    el.setPointerCapture(e.pointerId)
-  }, [])
-
-  const handleCarouselPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const state = carouselDragRef.current
-    if (!state.active) return
-    if (state.pointerId !== e.pointerId) return
-
-    const el = carouselRef.current
-    if (!el) return
-
-    const dx = e.clientX - state.startX
-
-    if (Math.abs(dx) > 4) {
-      state.moved = true
-    }
-
-    el.scrollLeft = state.startScrollLeft - dx
-
-    e.preventDefault()
-  }, [])
-
-  const stopCarouselDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const state = carouselDragRef.current
-    if (!state.active) return
-    if (state.pointerId !== e.pointerId) return
-
-    const el = carouselRef.current
-    if (el?.hasPointerCapture(e.pointerId)) {
-      el.releasePointerCapture(e.pointerId)
-    }
-
-    carouselDragRef.current.active = false
-    carouselDragRef.current.pointerId = -1
-
-    snapCarouselToNearest()
-  }, [snapCarouselToNearest])
+      snapToCase(target)
+    },
+    [selectedCaseIndex, snapToCase],
+  )
 
   return (
     <>
@@ -304,52 +257,55 @@ function CreateShowcaseSheet({
               {/* Carousel */}
               <FloatInItem index={3} kind="image">
                 <div
-                  ref={carouselRef}
-                  onScroll={handleCarouselScroll}
-                  onPointerDown={handleCarouselPointerDown}
-                  onPointerMove={handleCarouselPointerMove}
-                  onPointerUp={stopCarouselDrag}
-                  onPointerCancel={stopCarouselDrag}
-                  onLostPointerCapture={stopCarouselDrag}
-                  className="[&::-webkit-scrollbar]:hidden"
                   style={{
-                    width: 322,
-                    height: 322,
-                    overflowX: 'auto',
-                    overflowY: 'hidden',
-                    display: 'flex',
-                    scrollSnapType: 'x mandatory',
-                    WebkitOverflowScrolling: 'touch',
-                    scrollbarWidth: 'none',
-                    msOverflowStyle: 'none',
+                    width: CASE_WIDTH,
+                    height: CASE_WIDTH,
+                    overflow: 'hidden',
                     touchAction: 'pan-x',
                     cursor: 'grab',
                   }}
                 >
-                  {DISPLAY_CASES.map((item) => (
-                    <div
-                      key={item.image}
-                      style={{
-                        width: 322,
-                        height: 322,
-                        flexShrink: 0,
-                        scrollSnapAlign: 'center',
-                      }}
-                    >
-                      <img
-                        src={publicAsset(item.image)}
-                        alt=""
+                  <motion.div
+                    drag="x"
+                    dragConstraints={{
+                      left: -(CASE_COUNT - 1) * CASE_WIDTH,
+                      right: 0,
+                    }}
+                    dragElastic={0.18}
+                    dragMomentum={false}
+                    dragDirectionLock
+                    onDragEnd={handleCarouselDragEnd}
+                    style={{
+                      x: carouselX,
+                      width: CASE_WIDTH * CASE_COUNT,
+                      height: CASE_WIDTH,
+                      display: 'flex',
+                    }}
+                  >
+                    {DISPLAY_CASES.map((item) => (
+                      <div
+                        key={item.image}
                         style={{
-                          width: 322,
-                          height: 322,
-                          display: 'block',
-                          pointerEvents: 'none',
-                          userSelect: 'none',
+                          width: CASE_WIDTH,
+                          height: CASE_WIDTH,
+                          flexShrink: 0,
                         }}
-                        draggable={false}
-                      />
-                    </div>
-                  ))}
+                      >
+                        <img
+                          src={publicAsset(item.image)}
+                          alt=""
+                          style={{
+                            width: CASE_WIDTH,
+                            height: CASE_WIDTH,
+                            display: 'block',
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                          }}
+                          draggable={false}
+                        />
+                      </div>
+                    ))}
+                  </motion.div>
                 </div>
               </FloatInItem>
 
