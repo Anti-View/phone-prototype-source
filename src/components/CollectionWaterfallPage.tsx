@@ -17,7 +17,7 @@ const DISPLAY_CASES = [
       '趣味洞洞板为你定格现实好物，开启 HarmonyOS Vision，把它们变成贴纸与挂件随心定格。',
   },
   {
-    image: 'img/木质柜台.png',
+    image: 'img/木制柜台.png',
     description:
       '经典木质展台，专为陈列专辑与书封而设，你和 Catlien 的心头好，皆在此悉数收纳。',
   },
@@ -37,6 +37,29 @@ function CreateShowcaseSheet({
   const carouselRef = useRef<HTMLDivElement | null>(null)
   const selectedCase = DISPLAY_CASES[selectedCaseIndex]
 
+  const carouselDragRef = useRef({
+    active: false,
+    pointerId: -1,
+    startX: 0,
+    startScrollLeft: 0,
+    moved: false,
+  })
+
+  const snapCarouselToNearest = useCallback(() => {
+    const el = carouselRef.current
+    if (!el) return
+
+    const nextIndex = Math.round(el.scrollLeft / 322)
+    const clampedIndex = Math.max(0, Math.min(DISPLAY_CASES.length - 1, nextIndex))
+
+    setSelectedCaseIndex(clampedIndex)
+
+    el.scrollTo({
+      left: clampedIndex * 322,
+      behavior: 'smooth',
+    })
+  }, [])
+
   const handleCarouselScroll = useCallback(() => {
     const el = carouselRef.current
     if (!el) return
@@ -46,6 +69,59 @@ function CreateShowcaseSheet({
 
     setSelectedCaseIndex(clampedIndex)
   }, [])
+
+  const handleCarouselPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType !== 'mouse') return
+    if (e.button !== 0) return
+
+    const el = carouselRef.current
+    if (!el) return
+
+    carouselDragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startScrollLeft: el.scrollLeft,
+      moved: false,
+    }
+
+    el.setPointerCapture(e.pointerId)
+  }, [])
+
+  const handleCarouselPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const state = carouselDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = carouselRef.current
+    if (!el) return
+
+    const dx = e.clientX - state.startX
+
+    if (Math.abs(dx) > 4) {
+      state.moved = true
+    }
+
+    el.scrollLeft = state.startScrollLeft - dx
+
+    e.preventDefault()
+  }, [])
+
+  const stopCarouselDrag = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const state = carouselDragRef.current
+    if (!state.active) return
+    if (state.pointerId !== e.pointerId) return
+
+    const el = carouselRef.current
+    if (el?.hasPointerCapture(e.pointerId)) {
+      el.releasePointerCapture(e.pointerId)
+    }
+
+    carouselDragRef.current.active = false
+    carouselDragRef.current.pointerId = -1
+
+    snapCarouselToNearest()
+  }, [snapCarouselToNearest])
 
   return (
     <>
@@ -230,6 +306,11 @@ function CreateShowcaseSheet({
                 <div
                   ref={carouselRef}
                   onScroll={handleCarouselScroll}
+                  onPointerDown={handleCarouselPointerDown}
+                  onPointerMove={handleCarouselPointerMove}
+                  onPointerUp={stopCarouselDrag}
+                  onPointerCancel={stopCarouselDrag}
+                  onLostPointerCapture={stopCarouselDrag}
                   className="[&::-webkit-scrollbar]:hidden"
                   style={{
                     width: 322,
@@ -238,11 +319,11 @@ function CreateShowcaseSheet({
                     overflowY: 'hidden',
                     display: 'flex',
                     scrollSnapType: 'x mandatory',
-                    scrollBehavior: 'smooth',
                     WebkitOverflowScrolling: 'touch',
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
                     touchAction: 'pan-x',
+                    cursor: 'grab',
                   }}
                 >
                   {DISPLAY_CASES.map((item) => (
@@ -262,6 +343,8 @@ function CreateShowcaseSheet({
                           width: 322,
                           height: 322,
                           display: 'block',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
                         }}
                         draggable={false}
                       />
