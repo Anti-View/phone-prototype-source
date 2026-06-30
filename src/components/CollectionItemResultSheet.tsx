@@ -30,7 +30,7 @@ export default function CollectionItemResultSheet({
       />
 
       <motion.div
-        className="absolute left-0 bottom-0 w-full h-[686px] bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
+        className="absolute left-0 bottom-0 w-full bg-[#EEEFF4] rounded-t-[38px] z-30 flex flex-col items-center overflow-hidden"
         style={{
           boxShadow: SHEET_SHADOW,
           fontFamily: 'var(--font-ui)',

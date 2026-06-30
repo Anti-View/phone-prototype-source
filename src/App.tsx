@@ -195,7 +195,7 @@ export default function App() {
     setTimeout(() => setToastVisible(false), 2500)
   }, [])
 
-  const startCollectionItemUpload = useCallback((selectedCaseIndex: number) => {
+  const openCollectionGalleryForCase = useCallback((selectedCaseIndex: number) => {
     setCollectionSelectedCaseIndex(selectedCaseIndex)
     setCollectionResultOpen(false)
     setCollectionLoadingOpen(false)
@@ -836,7 +836,7 @@ export default function App() {
           >
             <CollectionWaterfallPage
               onBack={goToDesktop}
-              onStartItemUpload={startCollectionItemUpload}
+              onOpenGalleryForCase={openCollectionGalleryForCase}
             />
           </motion.div>
         )}
