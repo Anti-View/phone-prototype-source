@@ -120,6 +120,8 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
               width: PHONE_WIDTH,
               height: PHONE_HEIGHT,
               zIndex: 1,
+              borderRadius: 64,
+              boxShadow: '0 0 0 12px rgba(255, 255, 255, 0.50)',
             }}
           >
             {children}
