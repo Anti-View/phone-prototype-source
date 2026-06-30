@@ -77,7 +77,7 @@ export default function PhoneFrame({ children }: { children: ReactNode }) {
         }}
       >
         <img
-          src={publicAsset('bg.jpg')}
+          src={publicAsset('img/bg.jpg')}
           alt=""
           aria-hidden="true"
           style={{
