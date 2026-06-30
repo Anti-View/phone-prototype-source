@@ -23,6 +23,7 @@ import { useAppState } from './hooks/useAppState'
 import DiaryDetailSheet from './components/DiaryDetailSheet'
 import AlbumWaterfallPage from './components/AlbumWaterfallPage'
 import CollectionWaterfallPage from './components/CollectionWaterfallPage'
+import CollectionItemResultSheet from './components/CollectionItemResultSheet'
 import { FloatInGroup, FloatInItem } from './components/FloatIn'
 import type { DiaryEntry } from './types/diary'
 
@@ -156,6 +157,16 @@ export default function App() {
   const [toastKey, setToastKey] = useState(0)
   const [albumPhotos, setAlbumPhotos] = useState<string[]>([])
   const [collectionGalleryOpen, setCollectionGalleryOpen] = useState(false)
+  const [collectionLoadingOpen, setCollectionLoadingOpen] = useState(false)
+  const [collectionResultOpen, setCollectionResultOpen] = useState(false)
+  const [collectionSelectedCaseIndex, setCollectionSelectedCaseIndex] = useState(0)
+  const collectionLoadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const COLLECTION_DISPLAY_CASE_IMAGES = [
+    'img/洞洞板.png',
+    'img/木制柜台.png',
+    'img/亚克力.png',
+  ] as const
 
   const handleAlbumCapture = useCallback((dataURL: string) => {
     setAlbumPhotos(prev => [dataURL, ...prev].slice(0, 10))
@@ -184,12 +195,34 @@ export default function App() {
     setTimeout(() => setToastVisible(false), 2500)
   }, [])
 
-  const openCollectionGallery = useCallback(() => {
+  const startCollectionItemUpload = useCallback((selectedCaseIndex: number) => {
+    setCollectionSelectedCaseIndex(selectedCaseIndex)
+    setCollectionResultOpen(false)
+    setCollectionLoadingOpen(false)
     setCollectionGalleryOpen(true)
   }, [])
 
-  const closeCollectionGallery = useCallback(() => {
+  const handleCollectionPhotoSelect = useCallback((_photoIndex: number) => {
     setCollectionGalleryOpen(false)
+    setCollectionLoadingOpen(true)
+
+    if (collectionLoadingTimer.current) {
+      clearTimeout(collectionLoadingTimer.current)
+    }
+
+    collectionLoadingTimer.current = setTimeout(() => {
+      setCollectionLoadingOpen(false)
+      setCollectionResultOpen(true)
+      collectionLoadingTimer.current = null
+    }, 3000)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (collectionLoadingTimer.current) {
+        clearTimeout(collectionLoadingTimer.current)
+      }
+    }
   }, [])
 
   const [selectedDiaryEntry, setSelectedDiaryEntry] = useState<DiaryEntry | null>(null)
@@ -803,7 +836,7 @@ export default function App() {
           >
             <CollectionWaterfallPage
               onBack={goToDesktop}
-              onOpenGallery={openCollectionGallery}
+              onStartItemUpload={startCollectionItemUpload}
             />
           </motion.div>
         )}
@@ -815,10 +848,42 @@ export default function App() {
           <GalleryPage
             key="collection-gallery-page"
             state="gallery"
-            onSelect={() => {
-              // TODO: Collection 选图后的下一步稍后再做
+            onSelect={handleCollectionPhotoSelect}
+            onCancel={() => setCollectionGalleryOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Collection loading overlay ── */}
+      <AnimatePresence>
+        {collectionLoadingOpen && (
+          <LoadingCard
+            key="collection-loading-card"
+            state="loading"
+            title="正在构建 3D 模型..."
+            description="HarmonyOS Vision 正在为你构建模型，只需几秒。"
+            onClose={() => {
+              if (collectionLoadingTimer.current) {
+                clearTimeout(collectionLoadingTimer.current)
+                collectionLoadingTimer.current = null
+              }
+              setCollectionLoadingOpen(false)
             }}
-            onCancel={closeCollectionGallery}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* ── Collection result sheet ── */}
+      <AnimatePresence>
+        {collectionResultOpen && (
+          <CollectionItemResultSheet
+            key="collection-item-result-sheet"
+            selectedCaseImage={COLLECTION_DISPLAY_CASE_IMAGES[collectionSelectedCaseIndex]}
+            onClose={() => setCollectionResultOpen(false)}
+            onSave={() => {
+              setCollectionResultOpen(false)
+              // TODO: 保存后的真实逻辑稍后再做
+            }}
           />
         )}
       </AnimatePresence>

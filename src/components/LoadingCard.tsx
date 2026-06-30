@@ -9,9 +9,16 @@ const SF = "'SF Pro Display', 'SF Pro', -apple-system"
 interface LoadingCardProps {
   state: AppState
   onClose: () => void
+  title?: string
+  description?: string
 }
 
-export default function LoadingCard({ state, onClose }: LoadingCardProps) {
+export default function LoadingCard({
+  state,
+  onClose,
+  title = '正在构建 3D 模型...',
+  description = '生成模型网格并绑定动画骨骼，这可能需要几秒钟。',
+}: LoadingCardProps) {
   const isVisible = state === 'loading'
 
   return (
@@ -73,9 +80,9 @@ export default function LoadingCard({ state, onClose }: LoadingCardProps) {
 
               {/* Text */}
               <FloatInItem index={2} kind="text" className="text-center">
-                <h2 className="text-[22px] font-semibold text-black">正在构建 3D 模型...</h2>
+                <h2 className="text-[22px] font-semibold text-black">{title}</h2>
                 <p className="text-[15px] text-black/50 mt-2 leading-relaxed">
-                  生成模型网格并绑定动画骨骼，这可能需要几秒钟。
+                  {description}
                 </p>
               </FloatInItem>
 
