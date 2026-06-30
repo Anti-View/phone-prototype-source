@@ -24,12 +24,11 @@ function getViewportSize() {
 function getStageScale() {
   if (typeof window === 'undefined') return MAX_STAGE_SCALE
 
-  const { width, height } = getViewportSize()
+  const { height } = getViewportSize()
 
-  if (width <= 0 || height <= 0) return MAX_STAGE_SCALE
+  if (height <= 0) return MAX_STAGE_SCALE
 
   return Math.min(
-    width / STAGE_WIDTH,
     height / STAGE_HEIGHT,
     MAX_STAGE_SCALE,
   )
